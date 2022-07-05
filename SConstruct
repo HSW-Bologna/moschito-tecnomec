@@ -38,7 +38,6 @@ CFLAGS = [
     "-g",
     "-O0",
     "-DSIMULATOR",
-    "-DI2C_DEVICES_STRUCT_TM_CONVERSION",
     "-DESP_PLATFORM",
     "-Desp_err_t=int",
     "-DLV_CONF_INCLUDE_SIMPLE",
@@ -108,12 +107,6 @@ def main():
         f'{COMPONENTS}/generic_embedded_libs/SConscript', exports=['gel_env', 'gel_selected'])
     env['CPPPATH'] += [include]
 
-    i2c_env = env
-    i2c_selected = ["dummy"]
-    (i2c, include) = SConscript(
-        f'{COMPONENTS}/I2C/SConscript', exports=['i2c_env', 'i2c_selected'])
-    env['CPPPATH'] += [include]
-
     sources = Glob(f'{SIMULATOR}/*.c')
     sources += Glob(f'{SIMULATOR}/port/*.c')
     sources += [File(filename) for filename in Path('main/model').rglob('*.c')]
@@ -132,7 +125,7 @@ def main():
                 File(f'{B64}/decode.c'), File(f'{B64}/buffer.c')]
 
     prog = env.Program(PROGRAM, sdkconfig + sources +
-                       freertos + gel + i2c)
+                       freertos + gel)
     env.Depends(prog, translations)
     PhonyTargets("run", f"./{PROGRAM}", prog, env)
     compileDB = env.CompilationDatabase('build/compile_commands.json')
