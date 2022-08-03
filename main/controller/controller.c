@@ -13,8 +13,8 @@ static const char *TAG = "Controller";
 
 
 void controller_init(model_t *pmodel) {
-    buzzer_beep(2, 50, 100);
-
+    // buzzer_beep(2, 50, 100);
+#if 0
     uint8_t buffer = 0;
     mcp23008_get_gpio_direction_register(io_driver, &buffer);
     ESP_LOGI(TAG, "dir %X", buffer);
@@ -58,6 +58,7 @@ void controller_init(model_t *pmodel) {
     mcp23008_get_gpio_register(io_driver, &buffer);
     ESP_LOGI(TAG, "gpio %X", buffer);
     vTaskDelay(1000);
+    #endif
 
     view_change_page(pmodel, &page_main);
 }

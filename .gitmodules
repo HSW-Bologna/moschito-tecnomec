@@ -25,3 +25,6 @@
 [submodule "components/--force"]
 	path = components/--force
 	url = https://github.com/Maldus512/I2C.git
+[submodule "components/liblightmodbus-esp"]
+	path = components/liblightmodbus-esp
+	url = https://github.com/Jacajack/liblightmodbus-esp.git
