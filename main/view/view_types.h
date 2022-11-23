@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include "lvgl.h"
+#include "model/model.h"
 
 
 #define VIEW_NULL_MESSAGE ((view_message_t){.cmsg = {0}, .vmsg = {0}})
@@ -37,18 +38,24 @@ typedef enum {
     VIEW_EVENT_CODE_LVGL = 0,
     VIEW_EVENT_CODE_TIMER,
     VIEW_EVENT_CODE_OPEN,
+    VIEW_EVENT_CODE_UPDATE,
 } view_event_code_t;
 
 
 typedef enum {
     VIEW_CONTROLLER_MESSAGE_CODE_NOTHING = 0,
+    VIEW_CONTROLLER_MESSAGE_CODE_TOGGLE_EROGATION,
+    VIEW_CONTROLLER_MESSAGE_CODE_START_EROGATION,
+    VIEW_CONTROLLER_MESSAGE_CODE_STOP_EROGATION,
 } view_controller_message_code_t;
 
 
 typedef struct {
     view_controller_message_code_t code;
 
-    union {};
+    union {
+        erogator_t erogator;
+    };
 } view_controller_message_t;
 
 
@@ -85,8 +92,8 @@ typedef struct {
 
     union {
         struct {
-            void *page;
-            void *extra;
+            const void *page;
+            void       *extra;
         };
         int id;
     };

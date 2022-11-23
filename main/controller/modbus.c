@@ -7,10 +7,7 @@
 #include "freertos/event_groups.h"
 #include "lightmodbus/master.h"
 #include "peripherals/hardwareprofile.h"
-#include "driver/uart.h"
 #include "esp_log.h"
-#include "config/app_config.h"
-#include "driver/gpio.h"
 #include "config/app_config.h"
 #include <sys/types.h>
 #include "lightmodbus/lightmodbus.h"
@@ -18,11 +15,8 @@
 #include "gel/timer/timecheck.h"
 #include "utils/utils.h"
 #include "modbus.h"
+#include "peripherals/rs232.h"
 
-
-#define MB_PORTNUM 1
-// Timeout threshold for UART = number of symbols (~10 tics) with unchanged state on receive pin
-#define ECHO_READ_TOUT (3)     // 3.5T * 8 = 28 ticks, TOUT=3 -> ~24..33 ticks
 
 #define MODBUS_RESPONSE_03_LEN(data_len) (5 + data_len * 2)
 
@@ -40,7 +34,7 @@
 #define MODBUS_AUTO_COMMISSIONING_DONE_BIT 0x01
 
 struct __attribute__((packed)) task_message {
-    uint8_t             address;
+    uint8_t address;
     union {
         struct {
             int value;
@@ -49,31 +43,14 @@ struct __attribute__((packed)) task_message {
     };
 };
 
-static void                  modbus_task(void *args);
+static void modbus_task(void *args);
 
-static const char *  TAG       = "Modbus";
+static const char   *TAG       = "Modbus";
 static QueueHandle_t messageq  = NULL;
 static QueueHandle_t responseq = NULL;
 static TaskHandle_t  task      = NULL;
 
 void modbus_init(void) {
-    uart_config_t uart_config = {
-        .baud_rate           = 115200,
-        .data_bits           = UART_DATA_8_BITS,
-        .parity              = UART_PARITY_DISABLE,
-        .stop_bits           = UART_STOP_BITS_1,
-        .flow_ctrl           = UART_HW_FLOWCTRL_DISABLE,
-        .rx_flow_ctrl_thresh = 122,
-    };
-
-    // Configure UART parameters
-    ESP_ERROR_CHECK(uart_param_config(MB_PORTNUM, &uart_config));
-
-    uart_set_pin(MB_PORTNUM, HAP_TX1, HAP_RX1, -1, -1);
-    ESP_ERROR_CHECK(uart_driver_install(MB_PORTNUM, 512, 512, 10, NULL, 0));
-    ESP_ERROR_CHECK(uart_set_mode(MB_PORTNUM, UART_MODE_UART));
-    ESP_ERROR_CHECK(uart_set_rx_timeout(MB_PORTNUM, ECHO_READ_TOUT));
-
     static StaticQueue_t static_queue1;
     static uint8_t       queue_buffer1[MODBUS_MESSAGE_QUEUE_SIZE * sizeof(struct task_message)] = {0};
     messageq =
@@ -92,9 +69,7 @@ void modbus_init(void) {
 static ModbusError dataCallback(const ModbusMaster *master, const ModbusDataCallbackArgs *args) {
     modbus_response_t *response = modbusMasterGetUserPointer(master);
     printf("Received data from %d, reg: %d, value: %d\n", args->address, args->index, args->value);
-    if (response != NULL) {
-        
-    }
+    if (response != NULL) {}
     return MODBUS_OK;
 }
 
@@ -112,7 +87,7 @@ static void modbus_task(void *args) {
                                            dataCallback,                // Callback for handling incoming data
                                            masterExceptionCallback,     // Exception callback (optional)
                                            modbusDefaultAllocator,      // Memory allocator used to allocate request
-                                           modbusMasterDefaultFunctions,            // Set of supported functions
+                                           modbusMasterDefaultFunctions,        // Set of supported functions
                                            modbusMasterDefaultFunctionCount     // Number of supported functions
     );
 
@@ -124,10 +99,11 @@ static void modbus_task(void *args) {
     ESP_LOGI(TAG, "Task starting");
     for (;;) {
         xTaskNotifyStateClear(task);
-        //uart_flush_input(MB_PORTNUM);
+        // uart_flush_input(MB_PORTNUM);
 
         if (xQueueReceive(messageq, &message, pdMS_TO_TICKS(100))) {
             error_resp.address = message.address;
+            (void)error_resp;
             modbusMasterSetUserPointer(&master, NULL);
 
             vTaskDelay(pdMS_TO_TICKS(MODBUS_TIMEOUT));

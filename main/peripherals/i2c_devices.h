@@ -6,6 +6,7 @@
 
 
 extern i2c_driver_t io_driver;
+extern i2c_driver_t rtc_driver;
 
 
 void i2c_devices_init(void);

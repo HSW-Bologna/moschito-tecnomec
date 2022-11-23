@@ -30,6 +30,7 @@ B64 = f"{SIMULATOR}/b64"
 LVGL = f"{COMPONENTS}/lvgl"
 DRIVERS = f"{SIMULATOR}/lv_drivers"
 STRING_TRANSLATIONS = f"{MAIN}/view/intl"
+LIGHTMODBUS = f"{COMPONENTS}/liblightmodbus-esp"
 
 CFLAGS = [
     "-Wall",
@@ -41,20 +42,22 @@ CFLAGS = [
     "-DESP_PLATFORM",
     "-Desp_err_t=int",
     "-DLV_CONF_INCLUDE_SIMPLE",
-    "-DLV_HOR_RES_MAX=480",
-    "-DLV_VER_RES_MAX=320",
+    "-DLV_HOR_RES_MAX=320",
+    "-DLV_VER_RES_MAX=480",
     '-DprojCOVERAGE_TEST=1',
     '-DGEL_PARAMETER_CONFIGURATION_HEADER="\\"gel_parameter_conf.h\\""',
     '-DGEL_PAGEMANAGER_CONFIGURATION_HEADER="\\"gel_pman_conf.h\\""',
     "-Wno-unused-parameter",
     "-static-libgcc",
     "-static-libstdc++",
+    "-DLIGHTMODBUS_FULL",
 ]
 LDLIBS = ["-lSDL2", "-lpthread", "-lm"]
 
 CPPPATH = [
     COMPONENTS, f'#{SIMULATOR}/port', f'#{MAIN}',
     f"#{MAIN}/config", f"#{SIMULATOR}", B64, CJSON, f"#{LVGL}", f"#{DRIVERS}",
+    f"#{LIGHTMODBUS}/repo/include"
 ]
 
 TRANSLATIONS = [
@@ -100,6 +103,12 @@ def main():
         f'{FREERTOS}/SConscript', exports=['freertos_env'])
     env['CPPPATH'] += [include]
 
+    i2c_env = env
+    i2c_selected = ["dummy", "io/MCP23008"]
+    (i2c, include) = SConscript(
+        f'{COMPONENTS}/I2C/SConscript', exports=['i2c_env', 'i2c_selected'])
+    env['CPPPATH'] += [include]
+
     gel_env = env
     gel_selected = ["pagemanager", "collections",
                     "parameter", "timer", "data_structures"]
@@ -123,9 +132,10 @@ def main():
     sources += [File(f'{CJSON}/cJSON.c')]
     sources += [File(f'{B64}/encode.c'),
                 File(f'{B64}/decode.c'), File(f'{B64}/buffer.c')]
+    sources += [File(f"{LIGHTMODBUS}/src/impl.c")]
 
     prog = env.Program(PROGRAM, sdkconfig + sources +
-                       freertos + gel)
+                       freertos + i2c + gel)
     env.Depends(prog, translations)
     PhonyTargets("run", f"./{PROGRAM}", prog, env)
     compileDB = env.CompilationDatabase('build/compile_commands.json')
