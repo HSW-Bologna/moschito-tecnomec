@@ -1,5 +1,7 @@
 #include "view/view.h"
 #include "common.h"
+#include "theme/style.h"
+#include "view/intl/intl.h"
 
 
 LV_IMG_DECLARE(img_erogators_inactive);
@@ -27,12 +29,43 @@ void view_common_set_hidden(lv_obj_t *obj, uint8_t hidden) {
 }
 
 
+void view_common_set_checked(lv_obj_t *obj, uint8_t checked) {
+    if ((lv_obj_get_state(obj) & LV_STATE_CHECKED) > 0 && !checked) {
+        lv_obj_clear_state(obj, LV_STATE_CHECKED);
+    } else if ((lv_obj_get_state(obj) & LV_STATE_CHECKED) == 0 && checked) {
+        lv_obj_add_state(obj, LV_STATE_CHECKED);
+    }
+}
+
+
 lv_obj_t *view_common_menu_button(lv_obj_t *root, const lv_img_dsc_t *img_dsc, int id) {
     lv_obj_t *btn = lv_btn_create(lv_scr_act());
     lv_obj_set_size(btn, 90, 90);
     lv_obj_t *img = lv_img_create(btn);
     lv_obj_center(img);
     lv_img_set_src(img, img_dsc);
+    view_register_object_default_callback(btn, id);
+    return btn;
+}
+
+
+lv_obj_t *view_common_option_button(lv_obj_t *root, int id) {
+    lv_obj_t *btn = lv_btn_create(root);
+    lv_obj_add_style(btn, (lv_style_t *)&style_option_btn, LV_STATE_DEFAULT);
+    view_register_object_default_callback(btn, id);
+    return btn;
+}
+
+
+lv_obj_t *view_common_modify_button(lv_obj_t *root, const char *text, const lv_font_t *font, int id) {
+    lv_obj_t *btn = lv_btn_create(root);
+    lv_obj_set_size(btn, 90, 90);
+    lv_obj_add_style(btn, (lv_style_t *)&style_modify_btn, LV_STATE_DEFAULT);
+    lv_obj_t *lbl = lv_label_create(btn);
+    lv_obj_set_style_text_font(lbl, font, LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(lbl, STYLE_BG_COLOR, LV_STATE_DEFAULT);
+    lv_label_set_text(lbl, text);
+    lv_obj_center(lbl);
     view_register_object_default_callback(btn, id);
     return btn;
 }
@@ -46,23 +79,29 @@ void view_common_erogator_graphic_create(lv_obj_t *root, view_common_erogator_gr
 
     img = lv_img_create(lv_scr_act());
     lv_img_set_src(img, &img_erogation_1);
-    lv_obj_align_to(img, pointers->img_erogators, LV_ALIGN_TOP_LEFT, -50, -15);
     pointers->img_erogation_1 = img;
 
     img = lv_img_create(lv_scr_act());
     lv_img_set_src(img, &img_erogation_2);
-    lv_obj_align_to(img, pointers->img_erogators, LV_ALIGN_TOP_RIGHT, 65, -30);
     pointers->img_erogation_2 = img;
 
     img = lv_img_create(lv_scr_act());
     lv_img_set_src(img, &img_dead_mosquito);
-    lv_obj_align_to(img, pointers->img_erogation_1, LV_ALIGN_TOP_LEFT, -30, -30);
     pointers->img_dead_mosquito = img;
 
     img = lv_img_create(lv_scr_act());
     lv_img_set_src(img, &img_live_mosquito);
-    lv_obj_align_to(img, pointers->img_erogation_2, LV_ALIGN_TOP_RIGHT, 15, -15);
     pointers->img_live_mosquito = img;
+
+    view_common_erogator_graphic_realign(pointers);
+}
+
+
+void view_common_erogator_graphic_realign(view_common_erogator_graphic_t *pointers) {
+    lv_obj_align_to(pointers->img_erogation_1, pointers->img_erogators, LV_ALIGN_TOP_LEFT, -50, -15);
+    lv_obj_align_to(pointers->img_erogation_2, pointers->img_erogators, LV_ALIGN_TOP_RIGHT, 65, -30);
+    lv_obj_align_to(pointers->img_dead_mosquito, pointers->img_erogation_1, LV_ALIGN_TOP_LEFT, -30, -30);
+    lv_obj_align_to(pointers->img_live_mosquito, pointers->img_erogation_2, LV_ALIGN_TOP_RIGHT, 15, -15);
 }
 
 
@@ -92,4 +131,72 @@ void view_common_update_erogator_graphic(view_common_erogator_graphic_t *pointer
             view_common_set_hidden(pointers->img_live_mosquito, 0);
             break;
     }
+}
+
+
+lv_obj_t *view_common_horizontal_line(lv_obj_t *root) {
+    static lv_point_t points[2] = {{0, 0}, {270, 0}};
+    lv_obj_t         *line      = lv_line_create(root);
+    lv_line_set_points(line, points, 2);
+    lv_obj_set_style_line_color(line, STYLE_FG_COLOR, LV_STATE_DEFAULT);
+    lv_obj_set_style_line_width(line, 2, LV_STATE_DEFAULT);
+    lv_obj_set_style_line_rounded(line, 1, LV_STATE_DEFAULT);
+    return line;
+}
+
+
+lv_obj_t *view_common_vertical_parameter_widget(lv_obj_t *root, lv_obj_t **lbl, int id_minus, int id_plus) {
+    lv_obj_t *cont = lv_obj_create(root);
+    lv_obj_set_size(cont, 80, 220);
+
+    *lbl = lv_label_create(cont);
+    lv_obj_set_style_text_font(*lbl, STYLE_FONT_HUGE, LV_STATE_DEFAULT);
+    lv_obj_center(*lbl);
+
+    lv_obj_t *btn = view_common_modify_button(cont, LV_SYMBOL_MINUS, STYLE_FONT_HUGE, id_minus);
+    lv_obj_set_size(btn, 72, 72);
+    lv_obj_align_to(btn, *lbl, LV_ALIGN_OUT_BOTTOM_MID, 0, 8);
+
+    btn = view_common_modify_button(cont, LV_SYMBOL_PLUS, STYLE_FONT_HUGE, id_plus);
+    lv_obj_set_size(btn, 72, 72);
+    lv_obj_align_to(btn, *lbl, LV_ALIGN_OUT_TOP_MID, 0, -8);
+
+    return cont;
+}
+
+
+lv_obj_t *view_common_horizontal_parameter_widget(lv_obj_t *root, lv_obj_t **lbl, int id_minus, int id_plus) {
+    lv_obj_t *cont = lv_obj_create(root);
+    lv_obj_set_size(cont, 264, 80);
+
+    *lbl = lv_label_create(cont);
+    lv_obj_set_style_text_font(*lbl, STYLE_FONT_HUGE, LV_STATE_DEFAULT);
+    lv_obj_center(*lbl);
+
+    lv_obj_t *btn = view_common_modify_button(cont, LV_SYMBOL_MINUS, STYLE_FONT_HUGE, id_minus);
+    lv_obj_set_size(btn, 72, 72);
+    lv_obj_align_to(btn, *lbl, LV_ALIGN_OUT_LEFT_MID, -8, 0);
+
+    btn = view_common_modify_button(cont, LV_SYMBOL_PLUS, STYLE_FONT_HUGE, id_plus);
+    lv_obj_set_size(btn, 72, 72);
+    lv_obj_align_to(btn, *lbl, LV_ALIGN_OUT_RIGHT_MID, 8, 0);
+
+    return cont;
+}
+
+
+lv_obj_t *view_common_program_label(model_t *pmodel, lv_obj_t *root, lv_color_t color, unsigned int num) {
+    lv_obj_t *cont = lv_obj_create(root);
+    lv_obj_set_style_radius(cont, 4, LV_STATE_DEFAULT);
+    lv_obj_set_size(cont, 100, 20);
+    lv_obj_set_style_bg_color(cont, color, LV_STATE_DEFAULT);
+
+    lv_obj_t *lbl = lv_label_create(cont);
+    lv_obj_set_style_text_font(lbl, STYLE_FONT_TINY, LV_STATE_DEFAULT);
+    lv_label_set_text_fmt(lbl, "%s %i", view_intl_get_string(pmodel, STRINGS_PROGRAMMA), num + 1);
+    lv_obj_center(lbl);
+
+    lv_obj_align(cont, LV_ALIGN_TOP_MID, 24, 28);
+
+    return cont;
 }

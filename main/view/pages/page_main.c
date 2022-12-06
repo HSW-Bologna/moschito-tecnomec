@@ -71,7 +71,7 @@ static void open_page(model_t *pmodel, void *args) {
     lv_obj_align(img, LV_ALIGN_TOP_MID, 0, 32);
 
     btn = lv_btn_create(lv_scr_act());
-    lv_obj_set_size(btn, 64, 64);
+    lv_obj_set_size(btn, 56, 56);
     img = lv_img_create(btn);
     lv_obj_center(img);
     lv_img_set_src(img, &img_gear);
@@ -124,15 +124,20 @@ static view_message_t page_event(model_t *pmodel, void *args, view_event_t event
                             update_page(pmodel, pdata);
                             break;
 
+                        case SETTINGS_BTN_ID:
+                            msg.vmsg.code = VIEW_PAGE_MESSAGE_CODE_CHANGE_PAGE;
+                            msg.vmsg.page = &page_settings;
+                            break;
+
                         case NIGHT_BTN_ID:
                             msg.vmsg.code  = VIEW_PAGE_MESSAGE_CODE_CHANGE_PAGE_EXTRA;
-                            msg.vmsg.page  = &page_manual;
+                            msg.vmsg.page  = &page_selection;
                             msg.vmsg.extra = (void *)(uintptr_t)EROGATOR_1;
                             break;
 
                         case DAY_BTN_ID:
                             msg.vmsg.code  = VIEW_PAGE_MESSAGE_CODE_CHANGE_PAGE_EXTRA;
-                            msg.vmsg.page  = &page_manual;
+                            msg.vmsg.page  = &page_selection;
                             msg.vmsg.extra = (void *)(uintptr_t)EROGATOR_2;
                             break;
                     }

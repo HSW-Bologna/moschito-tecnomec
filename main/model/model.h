@@ -4,6 +4,13 @@
 #include <assert.h>
 #include <stdint.h>
 #include <stddef.h>
+#include "gel/scheduler/scheduler.h"
+
+
+#define LANGUAGE_ITALIANO 0
+#define LANGUAGE_ENGLISH  1
+#define NUM_EROGATORS     2
+#define NUM_PROGRAMS      GEL_SCHEDULER_MAX_ENTRIES
 
 
 #define GETTER(name, field)                                                                                            \
@@ -49,10 +56,24 @@ typedef enum {
 } erogators_state_t;
 
 
+typedef enum {
+    WORKING_MODE_CONTINUOUS,
+    WORKING_MODE_TIMED,
+} working_mode_t;
+
+
 typedef struct {
     struct {
-        uint16_t language;
-        uint16_t erogation_seconds;
+        uint16_t       language;
+        uint16_t       erogation_seconds;
+        uint8_t        brightness;
+        uint8_t        volume;
+        uint8_t        erogator_percentages[NUM_EROGATORS];
+        working_mode_t working_modes[NUM_EROGATORS][NUM_PROGRAMS];
+        unsigned long  active_seconds[NUM_EROGATORS][NUM_PROGRAMS];
+        unsigned long  pause_seconds[NUM_EROGATORS][NUM_PROGRAMS];
+
+        scheduler_t schedulers[NUM_EROGATORS];
     } configuration;
 
     struct {
@@ -62,17 +83,36 @@ typedef struct {
 } model_t;
 
 
-void     model_init(model_t *pmodel);
-uint16_t model_get_language(model_t *pmodel);
-void     model_start_erogator(model_t *pmodel, erogator_t erogator);
-void     model_stop_erogator(model_t *pmodel);
-void     model_toggle_erogator(model_t *pmodel, erogator_t erogator);
+void          model_init(model_t *pmodel);
+void          model_start_erogator(model_t *pmodel, erogator_t erogator);
+void          model_stop_erogator(model_t *pmodel);
+void          model_toggle_erogator(model_t *pmodel, erogator_t erogator);
+uint8_t       model_get_erogator_percentage(model_t *pmodel, erogator_t erogator);
+void          model_set_erogator_percentage(model_t *pmodel, erogator_t erogator, uint8_t percentage);
+uint8_t       model_is_program_enabled(model_t *pmodel, erogator_t erogator, size_t program);
+void          model_toggle_program(model_t *pmodel, erogator_t erogator, size_t program);
+void          model_clear_all_programs(model_t *pmodel, erogator_t erogator);
+uint8_t       model_get_program_days(model_t *pmodel, erogator_t erogator, size_t program);
+void          model_set_program_days(model_t *pmodel, erogator_t erogator, size_t program, uint8_t days);
+unsigned long model_get_program_start_second(model_t *pmodel, erogator_t erogator, size_t program);
+unsigned long model_get_program_stop_second(model_t *pmodel, erogator_t erogator, size_t program);
+void model_set_program_start_second(model_t *pmodel, erogator_t erogator, size_t program, unsigned long start_second);
+void model_set_program_stop_second(model_t *pmodel, erogator_t erogator, size_t program, unsigned long stop_second);
+working_mode_t model_get_working_mode(model_t *pmodel, erogator_t erogator, size_t program);
+void           model_toggle_working_mode(model_t *pmodel, erogator_t erogator, size_t program);
+unsigned long  model_get_erogation_active_time(model_t *pmodel, erogator_t erogator, size_t program);
+unsigned long  model_get_erogation_pause_time(model_t *pmodel, erogator_t erogator, size_t program);
+void model_set_erogation_active_time(model_t *pmodel, erogator_t erogator, size_t program, unsigned long seconds);
+void model_set_erogation_pause_time(model_t *pmodel, erogator_t erogator, size_t program, unsigned long seconds);
 
 
 GETTERNSETTER(stop, run.stop);
 
+GETTERNSETTER(language, configuration.language);
 GETTERNSETTER(erogators_state, run.erogators_state);
 GETTERNSETTER(erogation_seconds, configuration.erogation_seconds);
+GETTERNSETTER(volume, configuration.volume);
+GETTERNSETTER(brightness, configuration.brightness);
 
 TOGGLER(stop, run.stop);
 

@@ -16,8 +16,8 @@ static const lv_style_const_prop_t style_btn_props[] = {
     LV_STYLE_CONST_PAD_TOP(8),
     LV_STYLE_CONST_PAD_LEFT(8),
     LV_STYLE_CONST_PAD_RIGHT(8),
-    LV_STYLE_CONST_RADIUS(16),
-    LV_STYLE_CONST_BORDER_WIDTH(4),
+    LV_STYLE_CONST_RADIUS(12),
+    LV_STYLE_CONST_BORDER_WIDTH(3),
     LV_STYLE_CONST_BORDER_COLOR(STYLE_FG_COLOR),
     LV_STYLE_CONST_NULL,
 };
@@ -42,6 +42,25 @@ static const lv_style_const_prop_t style_disabled_props[] = {
     LV_STYLE_CONST_NULL,
 };
 static LV_STYLE_CONST_INIT(style_disabled, style_disabled_props);
+
+static const lv_style_const_prop_t style_cb_props[] = {
+    LV_STYLE_CONST_RADIUS(2),
+    LV_STYLE_CONST_NULL,
+};
+static LV_STYLE_CONST_INIT(style_cb, style_cb_props);
+
+static const lv_style_const_prop_t style_cb_marker_props[] = {
+    LV_STYLE_CONST_BG_COLOR(STYLE_FG_COLOR),
+    LV_STYLE_CONST_RADIUS(2),
+    LV_STYLE_CONST_NULL,
+};
+static LV_STYLE_CONST_INIT(style_cb_marker, style_cb_marker_props);
+
+static const lv_style_const_prop_t style_cb_marker_checked_props[] = {
+    LV_STYLE_CONST_BG_COLOR(LV_COLOR_MAKE(0xF4, 0xEE, 0x97)),
+    LV_STYLE_CONST_NULL,
+};
+static LV_STYLE_CONST_INIT(style_cb_marker_checked, style_cb_marker_checked_props);
 
 
 static void theme_apply_cb(lv_theme_t *th, lv_obj_t *obj);
@@ -73,5 +92,9 @@ static void theme_apply_cb(lv_theme_t *th, lv_obj_t *obj) {
         lv_obj_add_style(obj, (lv_style_t *)&style_btn_pressed, LV_STATE_PRESSED);
         lv_obj_add_style(obj, (lv_style_t *)&style_disabled, LV_STATE_DISABLED);
         lv_obj_add_style(obj, (lv_style_t *)&style_btn_checked, LV_STATE_CHECKED);
+    } else if (lv_obj_check_type(obj, &lv_checkbox_class)) {
+        lv_obj_add_style(obj, (lv_style_t *)&style_cb, LV_STATE_DEFAULT);
+        lv_obj_add_style(obj, (lv_style_t *)&style_cb_marker, LV_STATE_DEFAULT | LV_PART_INDICATOR);
+        lv_obj_add_style(obj, (lv_style_t *)&style_cb_marker_checked, LV_STATE_CHECKED | LV_PART_INDICATOR);
     }
 }

@@ -12,7 +12,7 @@
 
 LV_IMG_DECLARE(img_gear);
 LV_IMG_DECLARE(img_return);
-LV_IMG_DECLARE(img_manual);
+LV_IMG_DECLARE(img_manual_sm);
 LV_IMG_DECLARE(img_power_off);
 LV_IMG_DECLARE(img_power_on);
 LV_IMG_DECLARE(img_signal_off_off);
@@ -66,7 +66,7 @@ static void open_page(model_t *pmodel, void *args) {
     pdata->lbl_time = lbl;
 
     btn = lv_btn_create(lv_scr_act());
-    lv_obj_set_size(btn, 64, 64);
+    lv_obj_set_size(btn, 56, 56);
     img = lv_img_create(btn);
     lv_obj_center(img);
     lv_img_set_src(img, &img_gear);
@@ -75,11 +75,12 @@ static void open_page(model_t *pmodel, void *args) {
     view_register_object_default_callback(btn, SETTINGS_BTN_ID);
 
     img = lv_img_create(lv_scr_act());
-    lv_img_set_src(img, &img_manual);
+    lv_img_set_src(img, &img_manual_sm);
     lv_obj_align(img, LV_ALIGN_TOP_LEFT, 16, 24);
 
     view_common_erogator_graphic_create(lv_scr_act(), &pdata->erogator_objs);
-    lv_obj_align(pdata->erogator_objs.img_erogators, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_align(pdata->erogator_objs.img_erogators, LV_ALIGN_CENTER, 0, -8);
+    view_common_erogator_graphic_realign(&pdata->erogator_objs);
 
 
     btn = view_common_menu_button(lv_scr_act(), &img_return, BACK_BTN_ID);
@@ -130,6 +131,11 @@ static view_message_t page_event(model_t *pmodel, void *args, view_event_t event
                     switch (event.data.id) {
                         case BACK_BTN_ID:
                             msg.vmsg.code = VIEW_PAGE_MESSAGE_CODE_BACK;
+                            break;
+
+                        case SETTINGS_BTN_ID:
+                            msg.vmsg.code = VIEW_PAGE_MESSAGE_CODE_CHANGE_PAGE;
+                            msg.vmsg.page = &page_settings;
                             break;
 
                         case POWER_BTN_ID:

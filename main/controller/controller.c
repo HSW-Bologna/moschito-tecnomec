@@ -43,6 +43,8 @@ void controller_init(model_t *pmodel) {
     watcher_list_init(watched_variables);
 
     view_change_page(pmodel, &page_main);
+
+    ESP_LOGI(TAG, "Controller initialized");
 }
 
 

@@ -1,4 +1,24 @@
-const char *strings[1][2] = {
-    {"Ciao mondo", "Hello world", },
+const char *strings[21][2] = {
+    {"LINGUA", "LANGUAGE", },
+    {"DISPLAY", "DISPLAY", },
+    {"VOLUME", "VOLUME", },
+    {"GIORNO", "DAY", },
+    {"ORA", "TIME", },
+    {"PRODOTTO", "PRODUCT", },
+    {"MULTI PROGRAMMA", "MULTI PROGRAM", },
+    {"MODIFICA", "EDIT", },
+    {"PROGRAMMA", "PROGRAM", },
+    {"% PRODOTTO", "PRODUCT %", },
+    {"LUN", "MON", },
+    {"MAR", "TUE", },
+    {"MER", "WED", },
+    {"GIO", "THU", },
+    {"VEN", "FRI", },
+    {"SAB", "SAT", },
+    {"DOM", "SUN", },
+    {"INIZIO", "START", },
+    {"FINE", "END", },
+    {"SECONDI", "SECONDS", },
+    {"MINUTI", "MINUTES", },
 };
 

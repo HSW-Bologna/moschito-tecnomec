@@ -30,7 +30,9 @@ void        view_register_object_default_callback(lv_obj_t *obj, int id);
 void        view_event(view_event_t event);
 
 
-extern const pman_page_t page_main, page_manual;
+extern const pman_page_t page_main, page_manual, page_selection, page_settings, page_language, page_display, page_date,
+    page_time, page_erogators_percentage, page_auto, page_program_schedule, page_weekdays, page_program_schedule,
+    page_program_start_time, page_program_stop_time, page_timed_config;
 
 
 #endif

@@ -44,6 +44,7 @@ CFLAGS = [
     "-DLV_CONF_INCLUDE_SIMPLE",
     "-DLV_HOR_RES_MAX=320",
     "-DLV_VER_RES_MAX=480",
+    "-DGEL_SCHEDULER_MAX_ENTRIES=6",
     '-DprojCOVERAGE_TEST=1',
     '-DGEL_PARAMETER_CONFIGURATION_HEADER="\\"gel_parameter_conf.h\\""',
     '-DGEL_PAGEMANAGER_CONFIGURATION_HEADER="\\"gel_pman_conf.h\\""',
@@ -111,7 +112,7 @@ def main():
 
     gel_env = env
     gel_selected = ["pagemanager", "collections",
-                    "parameter", "timer", "data_structures"]
+                    "parameter", "timer", "data_structures", "scheduler"]
     (gel, include) = SConscript(
         f'{COMPONENTS}/generic_embedded_libs/SConscript', exports=['gel_env', 'gel_selected'])
     env['CPPPATH'] += [include]
