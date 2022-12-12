@@ -35,6 +35,8 @@ enum {
 
 struct page_data {
     lv_obj_t *lbl_time;
+    lv_obj_t *lbl_start_time;
+    lv_obj_t *lbl_stop_time;
 
     lv_obj_t *btn_continuous;
     lv_obj_t *btn_timed;
@@ -112,8 +114,9 @@ static void open_page(model_t *pmodel, void *args) {
     view_register_object_default_callback(btn, DAYS_BTN_ID);
 
 
-    btn = time_widget(lv_scr_act(),
-                      model_get_program_start_second(pmodel, pdata->program->erogator, pdata->program->num));
+    btn                   = time_widget(lv_scr_act(),
+                                        model_get_program_start_second(pmodel, pdata->program->erogator, pdata->program->num));
+    pdata->lbl_start_time = lv_obj_get_child(btn, 0);
     view_register_object_default_callback(btn, TIME_START_BTN_ID);
     lv_obj_align(btn, LV_ALIGN_TOP_LEFT, 25, 190);
 
@@ -125,6 +128,7 @@ static void open_page(model_t *pmodel, void *args) {
 
     btn =
         time_widget(lv_scr_act(), model_get_program_stop_second(pmodel, pdata->program->erogator, pdata->program->num));
+    pdata->lbl_stop_time = lv_obj_get_child(btn, 0);
     view_register_object_default_callback(btn, TIME_STOP_BTN_ID);
     lv_obj_align(btn, LV_ALIGN_TOP_LEFT, 25, 265);
 
@@ -233,6 +237,7 @@ static view_message_t page_event(model_t *pmodel, void *args, view_event_t event
                         case TIMED_BTN_ID:
                         case CONTINUOUS_BTN_ID:
                             model_toggle_working_mode(pmodel, pdata->program->erogator, pdata->program->num);
+
                             update_page(pmodel, pdata);
                             break;
 
@@ -286,6 +291,12 @@ static void update_page(model_t *pmodel, struct page_data *pdata) {
         view_common_set_hidden(pdata->btn_timed, 0);
         view_common_set_hidden(pdata->btn_timed_conf, 0);
     }
+
+    uint32_t start_second = model_get_program_start_second(pmodel, pdata->program->erogator, pdata->program->num);
+    lv_label_set_text_fmt(pdata->lbl_start_time, "%02i:%02i", start_second / 3600, (start_second / 60) % 60);
+
+    uint32_t stop_second = model_get_program_stop_second(pmodel, pdata->program->erogator, pdata->program->num);
+    lv_label_set_text_fmt(pdata->lbl_stop_time, "%02i:%02i", stop_second / 3600, (stop_second / 60) % 60);
 }
 
 

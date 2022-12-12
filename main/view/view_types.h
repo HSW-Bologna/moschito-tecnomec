@@ -47,6 +47,7 @@ typedef enum {
     VIEW_CONTROLLER_MESSAGE_CODE_TOGGLE_EROGATION,
     VIEW_CONTROLLER_MESSAGE_CODE_START_EROGATION,
     VIEW_CONTROLLER_MESSAGE_CODE_STOP_EROGATION,
+    VIEW_CONTROLLER_MESSAGE_CODE_SAVE_RTC_TIME,
 } view_controller_message_code_t;
 
 
@@ -55,6 +56,7 @@ typedef struct {
 
     union {
         erogator_t erogator;
+        struct tm  time_info;
     };
 } view_controller_message_t;
 

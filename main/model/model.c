@@ -90,10 +90,35 @@ uint8_t model_is_program_enabled(model_t *pmodel, erogator_t erogator, size_t pr
 }
 
 
-void model_toggle_program(model_t *pmodel, erogator_t erogator, size_t program) {
+void model_check_program_for_consistency(model_t *pmodel, erogator_t erogator, size_t program) {
+    assert(pmodel != NULL);
+
+    erogator_t         other_erogator = erogator == EROGATOR_1 ? EROGATOR_2 : EROGATOR_1;
+    scheduler_entry_t *entry          = scheduler_get_entry_mut(&pmodel->configuration.schedulers[erogator], program);
+
+    if (entry->enabled) {
+        if (scheduler_are_there_overlapping_entries(&pmodel->configuration.schedulers[other_erogator], entry)) {
+            entry->enabled = 0;
+        }
+    }
+}
+
+
+int model_toggle_program(model_t *pmodel, erogator_t erogator, size_t program) {
     assert(pmodel != NULL && program < NUM_PROGRAMS);
-    scheduler_get_entry_mut(&pmodel->configuration.schedulers[erogator], program)->enabled =
-        !model_is_program_enabled(pmodel, erogator, program);
+    scheduler_entry_t *entry       = scheduler_get_entry_mut(&pmodel->configuration.schedulers[erogator], program);
+    uint8_t            was_enabled = entry->enabled;
+
+    if (!was_enabled) {
+        erogator_t other_erogator = erogator == EROGATOR_1 ? EROGATOR_2 : EROGATOR_1;
+        // Check for conflicts
+        if (scheduler_are_there_overlapping_entries(&pmodel->configuration.schedulers[other_erogator], entry)) {
+            return -1;
+        }
+    }
+
+    entry->enabled = !was_enabled;
+    return 0;
 }
 
 
@@ -115,6 +140,7 @@ uint8_t model_get_program_days(model_t *pmodel, erogator_t erogator, size_t prog
 void model_set_program_days(model_t *pmodel, erogator_t erogator, size_t program, uint8_t days) {
     assert(pmodel != NULL && program < NUM_PROGRAMS);
     scheduler_get_entry_mut(&pmodel->configuration.schedulers[erogator], program)->days = days;
+    model_check_program_for_consistency(pmodel, erogator, program);
 }
 
 
@@ -140,6 +166,8 @@ void model_set_program_start_second(model_t *pmodel, erogator_t erogator, size_t
     } else if (scheduler_get_entry_duration(entry) > APP_CONFIG_MAX_CONTINUOUS_DURATION_SECONDS) {
         entry->end_second = entry->start_second + duration;
     }
+
+    model_check_program_for_consistency(pmodel, erogator, program);
 }
 
 
@@ -152,6 +180,7 @@ unsigned long model_get_program_stop_second(model_t *pmodel, erogator_t erogator
 void model_set_program_stop_second(model_t *pmodel, erogator_t erogator, size_t program, unsigned long stop_second) {
     assert(pmodel != NULL && program < NUM_PROGRAMS);
     scheduler_get_entry_mut(&pmodel->configuration.schedulers[erogator], program)->end_second = stop_second;
+    model_check_program_for_consistency(pmodel, erogator, program);
 }
 
 
@@ -178,6 +207,15 @@ void model_toggle_working_mode(model_t *pmodel, erogator_t erogator, size_t prog
     assert(pmodel != NULL && program < NUM_PROGRAMS);
 
     pmodel->configuration.working_modes[erogator][program] = !pmodel->configuration.working_modes[erogator][program];
+
+    if (pmodel->configuration.working_modes[erogator][program] == WORKING_MODE_CONTINUOUS) {
+        if (model_get_program_start_second(pmodel, erogator, program) + APP_CONFIG_MAX_CONTINUOUS_DURATION_SECONDS <
+            model_get_program_stop_second(pmodel, erogator, program)) {
+            model_set_program_stop_second(pmodel, erogator, program,
+                                          model_get_program_start_second(pmodel, erogator, program) +
+                                              APP_CONFIG_MAX_CONTINUOUS_DURATION_SECONDS);
+        }
+    }
 }
 
 

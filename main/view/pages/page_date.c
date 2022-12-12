@@ -136,7 +136,9 @@ static view_message_t page_event(model_t *pmodel, void *args, view_event_t event
                             break;
 
                         case CONFIRM_BTN_ID:
-                            msg.vmsg.code = VIEW_PAGE_MESSAGE_CODE_BACK;
+                            msg.vmsg.code      = VIEW_PAGE_MESSAGE_CODE_BACK;
+                            msg.cmsg.code      = VIEW_CONTROLLER_MESSAGE_CODE_SAVE_RTC_TIME;
+                            msg.cmsg.time_info = pdata->time_info;
                             break;
 
                         case DAY_MINUS_BTN_ID:

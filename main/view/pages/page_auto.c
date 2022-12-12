@@ -173,8 +173,14 @@ static view_message_t page_event(model_t *pmodel, void *args, view_event_t event
                 case LV_EVENT_VALUE_CHANGED: {
                     switch (event.data.id) {
                         case CHECK_PROG_CB_ID:
-                            model_toggle_program(pmodel, pdata->erogator, pdata->page_index * 3 + event.data.number);
-                            update_page(pmodel, pdata);
+                            if (model_toggle_program(pmodel, pdata->erogator,
+                                                     pdata->page_index * 3 + event.data.number) < 0) {
+                                msg.vmsg.code  = VIEW_PAGE_MESSAGE_CODE_CHANGE_PAGE_EXTRA;
+                                msg.vmsg.extra = (void *)(uintptr_t)pdata->erogator;
+                                msg.vmsg.page  = &page_warning;
+                            } else {
+                                update_page(pmodel, pdata);
+                            }
                             break;
                     }
                     break;

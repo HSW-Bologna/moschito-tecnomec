@@ -23,8 +23,9 @@ typedef enum {
     STRINGS_FINE,
     STRINGS_SECONDI,
     STRINGS_MINUTI,
+    STRINGS_L_ORARIO_DI_PROGRAMMAZIONE_COINCIDE,
 } strings_t;
 
-extern const char *strings[21][2];
+extern const char *strings[22][2];
 
 #endif

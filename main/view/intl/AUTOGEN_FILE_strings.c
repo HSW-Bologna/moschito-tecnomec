@@ -1,4 +1,4 @@
-const char *strings[21][2] = {
+const char *strings[22][2] = {
     {"LINGUA", "LANGUAGE", },
     {"DISPLAY", "DISPLAY", },
     {"VOLUME", "VOLUME", },
@@ -20,5 +20,6 @@ const char *strings[21][2] = {
     {"FINE", "END", },
     {"SECONDI", "SECONDS", },
     {"MINUTI", "MINUTES", },
+    {"L'ORARIO DI PROGRAMMAZIONE COINCIDE CON UN PROGRAMMA DELL'ALTRO LIQUIDO; IMPOSSIBILE ATTIVARE", "THE SCHEDULED TIME OVERLAPS WITH A PROGRAM FOR THE OTHER LIQUID; UNABLE TO ACTIVATE", },
 };
 

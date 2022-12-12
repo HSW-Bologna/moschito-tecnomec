@@ -38,6 +38,7 @@ CFLAGS = [
     "-Wno-unused-function",
     "-g",
     "-O0",
+    "-DI2C_DEVICES_STRUCT_TM_CONVERSION",
     "-DSIMULATOR",
     "-DESP_PLATFORM",
     "-Desp_err_t=int",
@@ -105,7 +106,7 @@ def main():
     env['CPPPATH'] += [include]
 
     i2c_env = env
-    i2c_selected = ["dummy", "io/MCP23008"]
+    i2c_selected = ["dummy", "io/MCP23008", "rtc/RX8010"]
     (i2c, include) = SConscript(
         f'{COMPONENTS}/I2C/SConscript', exports=['i2c_env', 'i2c_selected'])
     env['CPPPATH'] += [include]

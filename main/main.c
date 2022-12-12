@@ -18,6 +18,7 @@
 #include "peripherals/hardwareprofile.h"
 #include "controller/modbus.h"
 #include "peripherals/livelli.h"
+#include "peripherals/storage.h"
 #include "gel/keypad/keypad.h"
 #include "peripherals/button.c"
 #include "utils/utils.h"
@@ -37,6 +38,7 @@ void app_main(void) {
     modbus_init();
     livelli_init();
     button_init();
+    storage_init();
 
     model_init(&model);
     view_init(&model, disp_driver_flush, ft6x36_read);
