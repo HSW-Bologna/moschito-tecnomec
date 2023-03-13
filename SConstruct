@@ -46,12 +46,12 @@ CFLAGS = [
     "-DLV_HOR_RES_MAX=320",
     "-DLV_VER_RES_MAX=480",
     "-DGEL_SCHEDULER_MAX_ENTRIES=6",
-    '-DprojCOVERAGE_TEST=1',
+    '-DprojCOVERAGE_TEST=0',
     '-DGEL_PARAMETER_CONFIGURATION_HEADER="\\"gel_parameter_conf.h\\""',
     '-DGEL_PAGEMANAGER_CONFIGURATION_HEADER="\\"gel_pman_conf.h\\""',
     "-Wno-unused-parameter",
-    "-static-libgcc",
-    "-static-libstdc++",
+    # "-static-libgcc",
+    # "-static-libstdc++",
     "-DLIGHTMODBUS_FULL",
 ]
 LDLIBS = ["-lSDL2", "-lpthread", "-lm"]
@@ -127,6 +127,8 @@ def main():
     sources += [File(filename)
                 for filename in Path('main/controller').glob('*.c')]
     sources += [File(filename)
+                for filename in Path('main/controller/erogator').glob('*.c')]
+    sources += [File(filename)
                 for filename in Path('main/utils').rglob('*.c')]
     sources += [File(filename)
                 for filename in Path(f'{LVGL}/src').rglob('*.c')]
@@ -136,7 +138,7 @@ def main():
                 File(f'{B64}/decode.c'), File(f'{B64}/buffer.c')]
     sources += [File(f"{LIGHTMODBUS}/src/impl.c")]
 
-    prog = env.Program(PROGRAM, sdkconfig + sources +
+    prog = env.Program(PROGRAM, sources +
                        freertos + i2c + gel)
     env.Depends(prog, translations)
     PhonyTargets("run", f"./{PROGRAM}", prog, env)

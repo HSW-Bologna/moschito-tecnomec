@@ -78,7 +78,10 @@ typedef struct {
 
     struct {
         uint8_t           stop;
+        time_t            stop_time;
         erogators_state_t erogators_state;
+        uint8_t           missing_water_alarm;
+        uint8_t           missing_product[NUM_EROGATORS];
     } run;
 } model_t;
 
@@ -102,20 +105,22 @@ working_mode_t model_get_working_mode(model_t *pmodel, erogator_t erogator, size
 void           model_toggle_working_mode(model_t *pmodel, erogator_t erogator, size_t program);
 unsigned long  model_get_erogation_active_time(model_t *pmodel, erogator_t erogator, size_t program);
 unsigned long  model_get_erogation_pause_time(model_t *pmodel, erogator_t erogator, size_t program);
-void model_set_erogation_active_time(model_t *pmodel, erogator_t erogator, size_t program, unsigned long seconds);
-void model_set_erogation_pause_time(model_t *pmodel, erogator_t erogator, size_t program, unsigned long seconds);
-void model_check_program_for_consistency(model_t *pmodel, erogator_t erogator, size_t program);
+void    model_set_erogation_active_time(model_t *pmodel, erogator_t erogator, size_t program, unsigned long seconds);
+void    model_set_erogation_pause_time(model_t *pmodel, erogator_t erogator, size_t program, unsigned long seconds);
+void    model_check_program_for_consistency(model_t *pmodel, erogator_t erogator, size_t program);
+int     model_get_scheduler_active_erogator(model_t *pmodel, erogator_t *erogator);
+uint8_t model_is_erogation_stopped(model_t *pmodel);
+void    model_toggle_stop(model_t *pmodel);
+uint8_t model_set_missing_product_alarm(model_t *pmodel, erogator_t erogator, uint8_t value);
+uint8_t model_get_missing_product(model_t *pmodel, erogator_t erogator);
 
-
-GETTERNSETTER(stop, run.stop);
 
 GETTERNSETTER(language, configuration.language);
 GETTERNSETTER(erogators_state, run.erogators_state);
 GETTERNSETTER(erogation_seconds, configuration.erogation_seconds);
 GETTERNSETTER(volume, configuration.volume);
 GETTERNSETTER(brightness, configuration.brightness);
-
-TOGGLER(stop, run.stop);
+GETTERNSETTER(missing_water_alarm, run.missing_water_alarm);
 
 
 #endif

@@ -159,8 +159,11 @@ static view_message_t page_event(model_t *pmodel, void *args, view_event_t event
 
 
 static void update_page(model_t *pmodel, struct page_data *pdata) {
-    view_common_img_set_src(pdata->img_stop, model_get_stop(pmodel) ? &img_stop_active : &img_stop_inactive);
-    view_common_update_erogator_graphic(&pdata->erogator_objs, model_get_erogators_state(pmodel));
+    view_common_img_set_src(pdata->img_stop,
+                            model_is_erogation_stopped(pmodel) ? &img_stop_active : &img_stop_inactive);
+    view_common_update_erogator_graphic(
+        &pdata->erogator_objs, model_get_erogators_state(pmodel), model_get_missing_water_alarm(pmodel),
+        model_get_missing_product(pmodel, EROGATOR_1), model_get_missing_product(pmodel, EROGATOR_2));
 }
 
 

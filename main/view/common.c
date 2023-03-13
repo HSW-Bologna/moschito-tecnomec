@@ -9,8 +9,14 @@ LV_IMG_DECLARE(img_erogators_1);
 LV_IMG_DECLARE(img_erogators_2);
 LV_IMG_DECLARE(img_erogation_1);
 LV_IMG_DECLARE(img_erogation_2);
+LV_IMG_DECLARE(img_erogators_1_warning);
+LV_IMG_DECLARE(img_erogators_2_warning);
 LV_IMG_DECLARE(img_dead_mosquito);
 LV_IMG_DECLARE(img_live_mosquito);
+LV_IMG_DECLARE(img_locked_pump);
+LV_IMG_DECLARE(img_warning);
+LV_IMG_DECLARE(img_signal_off_sm);
+LV_IMG_DECLARE(img_signal_off_off);
 
 
 void view_common_img_set_src(lv_obj_t *img, const lv_img_dsc_t *dsc) {
@@ -93,43 +99,139 @@ void view_common_erogator_graphic_create(lv_obj_t *root, view_common_erogator_gr
     lv_img_set_src(img, &img_live_mosquito);
     pointers->img_live_mosquito = img;
 
+    img = lv_img_create(root);
+    lv_img_set_src(img, &img_locked_pump);
+    lv_obj_add_style(img, (lv_style_t *)&style_alpha_icon, LV_STATE_DEFAULT);
+    pointers->img_locked_pump = img;
+
+    img = lv_img_create(root);
+    lv_img_set_src(img, &img_warning);
+    pointers->img_pump_warning = img;
+
+    img = lv_img_create(root);
+    lv_img_set_src(img, &img_signal_off_off);
+    pointers->img_pump_off = img;
+
+    img = lv_img_create(root);
+    lv_img_set_src(img, &img_signal_off_sm);
+    lv_obj_add_style(img, (lv_style_t *)&style_alpha_icon, LV_STATE_DEFAULT);
+    pointers->img_erogator_1_off = img;
+
+    img = lv_img_create(root);
+    lv_img_set_src(img, &img_erogators_1_warning);
+    pointers->img_erogator_1_warning = img;
+
+    img = lv_img_create(root);
+    lv_img_set_src(img, &img_warning);
+    pointers->img_erogator_1_warning_icon = img;
+
+    img = lv_img_create(root);
+    lv_img_set_src(img, &img_signal_off_sm);
+    lv_obj_add_style(img, (lv_style_t *)&style_alpha_icon, LV_STATE_DEFAULT);
+    pointers->img_erogator_2_off = img;
+
+    img = lv_img_create(root);
+    lv_img_set_src(img, &img_erogators_2_warning);
+    pointers->img_erogator_2_warning = img;
+
+    img = lv_img_create(root);
+    lv_img_set_src(img, &img_warning);
+    pointers->img_erogator_2_warning_icon = img;
+
     view_common_erogator_graphic_realign(pointers);
 }
 
 
 void view_common_erogator_graphic_realign(view_common_erogator_graphic_t *pointers) {
+    lv_obj_align(pointers->img_locked_pump, LV_ALIGN_CENTER, 0, -48);
+    lv_obj_align(pointers->img_pump_warning, LV_ALIGN_CENTER, -100, 90);
+    lv_obj_align(pointers->img_pump_off, LV_ALIGN_CENTER, 50, 100);
+
+    lv_obj_align_to(pointers->img_erogator_1_warning_icon, pointers->img_erogators, LV_ALIGN_TOP_LEFT, -80, -30);
+    lv_obj_align_to(pointers->img_erogator_1_off, pointers->img_erogator_1_warning_icon, LV_ALIGN_OUT_BOTTOM_MID, 0, 0);
+
+    lv_obj_align_to(pointers->img_erogator_2_warning_icon, pointers->img_erogators, LV_ALIGN_TOP_RIGHT, 80, -30);
+    lv_obj_align_to(pointers->img_erogator_2_off, pointers->img_erogator_2_warning_icon, LV_ALIGN_OUT_BOTTOM_MID, 0, 0);
+
     lv_obj_align_to(pointers->img_erogation_1, pointers->img_erogators, LV_ALIGN_TOP_LEFT, -50, -15);
     lv_obj_align_to(pointers->img_erogation_2, pointers->img_erogators, LV_ALIGN_TOP_RIGHT, 65, -30);
+    lv_obj_align_to(pointers->img_erogator_1_warning, pointers->img_erogators, LV_ALIGN_LEFT_MID, 0, 0);
+    lv_obj_align_to(pointers->img_erogator_2_warning, pointers->img_erogators, LV_ALIGN_RIGHT_MID, 0, 0);
     lv_obj_align_to(pointers->img_dead_mosquito, pointers->img_erogation_1, LV_ALIGN_TOP_LEFT, -30, -30);
     lv_obj_align_to(pointers->img_live_mosquito, pointers->img_erogation_2, LV_ALIGN_TOP_RIGHT, 15, -15);
 }
 
 
-void view_common_update_erogator_graphic(view_common_erogator_graphic_t *pointers, erogators_state_t state) {
-    switch (state) {
-        case EROGATORS_STATE_OFF:
-            view_common_img_set_src(pointers->img_erogators, &img_erogators_inactive);
-            view_common_set_hidden(pointers->img_erogation_1, 1);
-            view_common_set_hidden(pointers->img_erogation_2, 1);
-            view_common_set_hidden(pointers->img_dead_mosquito, 1);
-            view_common_set_hidden(pointers->img_live_mosquito, 1);
-            break;
+void view_common_update_erogator_graphic(view_common_erogator_graphic_t *pointers, erogators_state_t state,
+                                         uint8_t missing_water_alarm, uint8_t missing_product_1,
+                                         uint8_t missing_product_2) {
+    if (missing_water_alarm) {
+        view_common_set_hidden(pointers->img_locked_pump, 0);
+        view_common_set_hidden(pointers->img_pump_warning, 0);
+        view_common_set_hidden(pointers->img_pump_off, 0);
 
-        case EROGATORS_STATE_1:
-            view_common_img_set_src(pointers->img_erogators, &img_erogators_1);
-            view_common_set_hidden(pointers->img_erogation_1, 0);
-            view_common_set_hidden(pointers->img_erogation_2, 1);
-            view_common_set_hidden(pointers->img_dead_mosquito, 0);
-            view_common_set_hidden(pointers->img_live_mosquito, 1);
-            break;
+        view_common_set_hidden(pointers->img_erogators, 1);
+        view_common_set_hidden(pointers->img_erogation_1, 1);
+        view_common_set_hidden(pointers->img_erogation_2, 1);
+        view_common_set_hidden(pointers->img_dead_mosquito, 1);
+        view_common_set_hidden(pointers->img_live_mosquito, 1);
+        view_common_set_hidden(pointers->img_erogator_1_off, 1);
+        view_common_set_hidden(pointers->img_erogator_1_warning, 1);
+        view_common_set_hidden(pointers->img_erogator_1_warning_icon, 1);
+        view_common_set_hidden(pointers->img_erogator_2_off, 1);
+        view_common_set_hidden(pointers->img_erogator_2_warning, 1);
+        view_common_set_hidden(pointers->img_erogator_2_warning_icon, 1);
+    } else {
+        view_common_set_hidden(pointers->img_locked_pump, 1);
+        view_common_set_hidden(pointers->img_pump_warning, 1);
+        view_common_set_hidden(pointers->img_pump_off, 1);
 
-        case EROGATORS_STATE_2:
-            view_common_img_set_src(pointers->img_erogators, &img_erogators_2);
-            view_common_set_hidden(pointers->img_erogation_1, 1);
-            view_common_set_hidden(pointers->img_erogation_2, 0);
-            view_common_set_hidden(pointers->img_dead_mosquito, 1);
-            view_common_set_hidden(pointers->img_live_mosquito, 0);
-            break;
+        switch (state) {
+            case EROGATORS_STATE_OFF:
+                view_common_img_set_src(pointers->img_erogators, &img_erogators_inactive);
+                view_common_set_hidden(pointers->img_erogation_1, 1);
+                view_common_set_hidden(pointers->img_erogation_2, 1);
+                view_common_set_hidden(pointers->img_dead_mosquito, 1);
+                view_common_set_hidden(pointers->img_live_mosquito, 1);
+                break;
+
+            case EROGATORS_STATE_1:
+                view_common_img_set_src(pointers->img_erogators, &img_erogators_1);
+                view_common_set_hidden(pointers->img_erogation_1, 0);
+                view_common_set_hidden(pointers->img_erogation_2, 1);
+                view_common_set_hidden(pointers->img_dead_mosquito, 0);
+                view_common_set_hidden(pointers->img_live_mosquito, 1);
+                break;
+
+            case EROGATORS_STATE_2:
+                view_common_img_set_src(pointers->img_erogators, &img_erogators_2);
+                view_common_set_hidden(pointers->img_erogation_1, 1);
+                view_common_set_hidden(pointers->img_erogation_2, 0);
+                view_common_set_hidden(pointers->img_dead_mosquito, 1);
+                view_common_set_hidden(pointers->img_live_mosquito, 0);
+                break;
+        }
+
+
+        if (missing_product_1) {
+            view_common_set_hidden(pointers->img_erogator_1_off, 0);
+            view_common_set_hidden(pointers->img_erogator_1_warning, 0);
+            view_common_set_hidden(pointers->img_erogator_1_warning_icon, 0);
+        } else {
+            view_common_set_hidden(pointers->img_erogator_1_off, 1);
+            view_common_set_hidden(pointers->img_erogator_1_warning, 1);
+            view_common_set_hidden(pointers->img_erogator_1_warning_icon, 1);
+        }
+
+        if (missing_product_2) {
+            view_common_set_hidden(pointers->img_erogator_2_off, 0);
+            view_common_set_hidden(pointers->img_erogator_2_warning, 0);
+            view_common_set_hidden(pointers->img_erogator_2_warning_icon, 0);
+        } else {
+            view_common_set_hidden(pointers->img_erogator_2_off, 1);
+            view_common_set_hidden(pointers->img_erogator_2_warning, 1);
+            view_common_set_hidden(pointers->img_erogator_2_warning_icon, 1);
+        }
     }
 }
 

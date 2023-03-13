@@ -170,7 +170,7 @@ static view_message_t page_event(model_t *pmodel, void *args, view_event_t event
 static void update_page(model_t *pmodel, struct page_data *pdata) {
     erogators_state_t corrisponding_state = pdata->erogator == EROGATOR_1 ? EROGATORS_STATE_1 : EROGATORS_STATE_2;
 
-    view_common_update_erogator_graphic(&pdata->erogator_objs, corrisponding_state);
+    view_common_update_erogator_graphic(&pdata->erogator_objs, corrisponding_state, 0, 0, 0);
 
     view_common_set_hidden(pdata->img_moon, pdata->erogator != EROGATOR_1);
     view_common_set_hidden(pdata->img_sun, pdata->erogator != EROGATOR_2);

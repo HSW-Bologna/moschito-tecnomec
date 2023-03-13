@@ -12,7 +12,7 @@
 #include "gel/data_structures/watcher.h"
 #include "esp_log.h"
 #include "utils/utils.h"
-#include "erogator.h"
+#include "erogator/erogator.h"
 #include "configuration.h"
 #include "observer.h"
 
@@ -62,6 +62,7 @@ void controller_init(model_t *pmodel) {
 
     configuration_load(pmodel);
     observer_init(pmodel);
+    erogator_refresh(pmodel);
 
     view_change_page(pmodel, &page_main);
 
@@ -75,19 +76,19 @@ void controller_process_message(model_t *pmodel, view_controller_message_t *msg)
             break;
 
         case VIEW_CONTROLLER_MESSAGE_CODE_TOGGLE_EROGATION:
-            if (erogator_get_state() == EROGATORS_STATE_OFF) {
-                erogator_run(msg->erogator, model_get_erogation_seconds(pmodel));
+            if (model_get_erogators_state(pmodel) == EROGATORS_STATE_OFF) {
+                erogator_run(pmodel, msg->erogator, model_get_erogation_seconds(pmodel));
             } else {
-                erogator_stop();
+                erogator_stop(pmodel);
             }
             break;
 
         case VIEW_CONTROLLER_MESSAGE_CODE_START_EROGATION:
-            erogator_run(msg->erogator, model_get_erogation_seconds(pmodel));
+            erogator_run(pmodel, msg->erogator, model_get_erogation_seconds(pmodel));
             break;
 
         case VIEW_CONTROLLER_MESSAGE_CODE_STOP_EROGATION:
-            erogator_stop();
+            erogator_stop(pmodel);
             break;
 
         case VIEW_CONTROLLER_MESSAGE_CODE_SAVE_RTC_TIME: {
@@ -102,11 +103,8 @@ void controller_manage(model_t *pmodel) {
     (void)pmodel;
     watcher_process_changes(watched_variables, get_millis());
 
-    observer_observe();
-
-    if (model_set_erogators_state(pmodel, erogator_get_state())) {
-        view_event((view_event_t){.code = VIEW_EVENT_CODE_UPDATE});
-    }
+    observer_observe(pmodel);
+    erogator_manage(pmodel);
 }
 
 

@@ -15,8 +15,12 @@ void model_init(model_t *pmodel) {
     pmodel->configuration.erogator_percentages[EROGATOR_1] = 100;
     pmodel->configuration.erogator_percentages[EROGATOR_2] = 100;
 
-    pmodel->run.stop            = 0;
-    pmodel->run.erogators_state = EROGATORS_STATE_OFF;
+    pmodel->run.stop                        = 0;
+    pmodel->run.stop_time                   = 0;
+    pmodel->run.erogators_state             = EROGATORS_STATE_OFF;
+    pmodel->run.missing_water_alarm         = 0;
+    pmodel->run.missing_product[EROGATOR_1] = 0;
+    pmodel->run.missing_product[EROGATOR_2] = 0;
 
     for (erogator_t erogator = EROGATOR_1; erogator <= EROGATOR_2; erogator++) {
         for (size_t i = 0; i < NUM_PROGRAMS; i++) {
@@ -28,6 +32,24 @@ void model_init(model_t *pmodel) {
 
     scheduler_init(&pmodel->configuration.schedulers[EROGATOR_1]);
     scheduler_init(&pmodel->configuration.schedulers[EROGATOR_2]);
+}
+
+
+uint8_t model_set_missing_product_alarm(model_t *pmodel, erogator_t erogator, uint8_t value) {
+    assert(pmodel != NULL);
+    value = value > 0;
+    if (pmodel->run.missing_product[erogator] != value) {
+        pmodel->run.missing_product[erogator] = value;
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+
+uint8_t model_get_missing_product(model_t *pmodel, erogator_t erogator) {
+    assert(pmodel != NULL);
+    return pmodel->run.missing_product[erogator];
 }
 
 
@@ -242,4 +264,43 @@ unsigned long model_get_erogation_pause_time(model_t *pmodel, erogator_t erogato
 void model_set_erogation_pause_time(model_t *pmodel, erogator_t erogator, size_t program, unsigned long seconds) {
     assert(pmodel != NULL && program < NUM_PROGRAMS);
     pmodel->configuration.pause_seconds[erogator][program] = seconds;
+}
+
+
+int model_get_scheduler_active_erogator(model_t *pmodel, erogator_t *erogator) {
+    assert(pmodel != NULL);
+
+    time_t    now       = time(NULL);
+    struct tm time_info = *localtime(&now);
+
+    int found = scheduler_get_active_entry_number(&pmodel->configuration.schedulers[EROGATOR_1], &time_info);
+    if (found >= 0) {
+        *erogator = EROGATOR_1;
+    } else {
+        found = scheduler_get_active_entry_number(&pmodel->configuration.schedulers[EROGATOR_2], &time_info);
+        if (found >= 0) {
+            *erogator = EROGATOR_2;
+        }
+    }
+
+    return found;
+}
+
+
+void model_toggle_stop(model_t *pmodel) {
+    assert(pmodel != NULL);
+
+    pmodel->run.stop      = !model_is_erogation_stopped(pmodel);
+    pmodel->run.stop_time = time(NULL);
+}
+
+
+uint8_t model_is_erogation_stopped(model_t *pmodel) {
+    assert(pmodel != NULL);
+    if (pmodel->run.stop == 0) {
+        return 0;
+    } else {
+        time_t now = time(NULL);
+        return (now >= pmodel->run.stop_time) && (now - pmodel->run.stop_time < (time_t)(24UL * 60UL * 60UL));
+    }
 }

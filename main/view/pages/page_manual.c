@@ -163,7 +163,9 @@ static view_message_t page_event(model_t *pmodel, void *args, view_event_t event
 static void update_page(model_t *pmodel, struct page_data *pdata) {
     erogators_state_t corrisponding_state = pdata->erogator == EROGATOR_1 ? EROGATORS_STATE_1 : EROGATORS_STATE_2;
 
-    view_common_update_erogator_graphic(&pdata->erogator_objs, corrisponding_state);
+    view_common_update_erogator_graphic(
+        &pdata->erogator_objs, corrisponding_state, model_get_missing_water_alarm(pmodel),
+        model_get_missing_product(pmodel, EROGATOR_1), model_get_missing_product(pmodel, EROGATOR_2));
 
     if (corrisponding_state == model_get_erogators_state(pmodel)) {
         view_common_img_set_src(pdata->img_power, &img_power_on);

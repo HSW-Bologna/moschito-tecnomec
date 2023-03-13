@@ -6,7 +6,7 @@
 
 
 void observer_init(model_t *pmodel);
-void observer_observe(void);
+void observer_observe(model_t *pmodel);
 
 
 #endif
