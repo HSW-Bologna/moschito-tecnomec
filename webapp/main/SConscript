@@ -1,0 +1,24 @@
+# type: ignore
+from utils import Rlistdirs
+
+Import("env")
+
+main_env = env.Clone()
+main_env.Append(
+    CPPDEFINES=["SIMULATOR"],
+)
+# main_env.MergeFlags("!sdl2-config --cflags")  # https://wiki.libsdl.org/SDL2/FAQLinux
+
+main_objs = main_env.Object(
+    [Glob(f"{dir}/*.c") for dir in Rlistdirs(".")]
+    + [
+        Glob(f"{dir}/*.c")
+        for dir in Rlistdirs(f"#/{env['MAIN_ROOT_VARIANT_DIR']}/model")
+    ]
+    + [
+        Glob(f"{dir}/*.c")
+        for dir in Rlistdirs(f"#/{env['MAIN_ROOT_VARIANT_DIR']}/view")
+    ]
+)
+
+Return("main_objs")

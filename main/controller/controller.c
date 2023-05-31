@@ -9,27 +9,31 @@
 #include "peripherals/i2c_devices.h"
 #include "I2C/i2c_devices/rtc/RX8010/rx8010.h"
 #include "I2C/i2c_devices/io/MCP23008/mcp23008.h"
-#include "gel/data_structures/watcher.h"
+#include "watcher.h" /* /components/c-watcher */
 #include "esp_log.h"
 #include "utils/utils.h"
 #include "erogator/erogator.h"
 #include "configuration.h"
 #include "observer.h"
+#include "wifi/network.h"
+#include "wifi/server.h"
+#include "rtc/rtc.h"
+#include "rtc/model_watcher.h"
 
 
-#define NUM_WATCHED_VARIABLES 1
-
-
-void erogators_cb(void *mem, void *args);
+void erogators_cb(void *old_buffer, const void *memory, size_t size, void *user_ptr, void *arg);
 
 
 static const char *TAG = "Controller";
 
 
-watcher_t watched_variables[NUM_WATCHED_VARIABLES + 1];
+/* watcher instance */
+static watcher_t watcher;
 
 
 void controller_init(model_t *pmodel) {
+    ESP_LOGI(TAG, "TEST SIZE 1: %zu", sizeof(time_t));
+
     erogator_init();
 
     // Rome, no DST
@@ -53,18 +57,17 @@ void controller_init(model_t *pmodel) {
 
     buzzer_beep(2, 50, 100);
 
-    size_t i               = 0;
-    watched_variables[i++] = WATCHER(&pmodel->run.erogators_state, erogators_cb, pmodel);
-    assert(i == NUM_WATCHED_VARIABLES);
-    watched_variables[i] = WATCHER_NULL;
-
-    watcher_list_init(watched_variables);
+    watcher_init(&watcher, pmodel);
+    WATCHER_ADD_ENTRY(&watcher, &pmodel->run.erogators_state, (void *) erogators_cb, NULL);
 
     configuration_load(pmodel);
     observer_init(pmodel);
     erogator_refresh(pmodel);
 
     view_change_page(pmodel, &page_main);
+
+    wifi_init_softap(pmodel);
+    rtc_initt(pmodel);
 
     ESP_LOGI(TAG, "Controller initialized");
 }
@@ -100,16 +103,28 @@ void controller_process_message(model_t *pmodel, view_controller_message_t *msg)
 
 
 void controller_manage(model_t *pmodel) {
-    (void)pmodel;
-    watcher_process_changes(watched_variables, get_millis());
+    watcher_watch(&watcher, get_millis());
 
     observer_observe(pmodel);
     erogator_manage(pmodel);
+
+    model_watcher_watch();
+
+    rtc_ws_msg_t rtc_ws_msg;
+    while (rtc_ws_get_next_msg(&rtc_ws_msg)) {
+        rtc_message_recvd_handler(rtc_ws_msg.data, rtc_ws_msg.size, pmodel);
+        free(rtc_ws_msg.data);
+    }
 }
 
 
-void erogators_cb(void *mem, void *args) {
-    model_t *pmodel = args;
+void erogators_cb(void *old_buffer, const void *memory, size_t size, void *user_ptr, void *arg) {
+    (void) old_buffer;
+    (void) memory;
+    (void) size;
+    (void) arg;
+
+    model_t *pmodel = (model_t *) user_ptr;
     switch (model_get_erogators_state(pmodel)) {
         case EROGATORS_STATE_OFF:
             DIGOUT_CLEAR(DIGOUT_PUMP);

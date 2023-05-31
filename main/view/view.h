@@ -21,6 +21,7 @@ pman_view_t view_change_page_extra(model_t *pmodel, const pman_page_t *page, voi
 pman_view_t view_change_page(model_t *model, const pman_page_t *page);
 pman_view_t view_swap_page_extra(model_t *pmodel, const pman_page_t *page, void *extra);
 pman_view_t view_swap_page(model_t *pmodel, const pman_page_t *page);
+pman_view_t view_refresh_current_page(model_t *pmodel);
 pman_view_t view_reset_to_page(model_t *model, int id);
 pman_view_t view_back(model_t *pmodel);
 

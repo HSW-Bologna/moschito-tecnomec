@@ -6,7 +6,7 @@
 #include "view.h"
 #include "theme/style.h"
 #include "theme/theme.h"
-#include "utils/utils.h"
+// #include "utils/utils.h"
 #include "gel/timer/timecheck.h"
 #include "esp_log.h"
 
@@ -103,6 +103,11 @@ pman_view_t view_swap_page_extra(model_t *pmodel, const pman_page_t *page, void 
 
 pman_view_t view_swap_page(model_t *pmodel, const pman_page_t *page) {
     return view_swap_page_extra(pmodel, page, NULL);
+}
+
+
+pman_view_t view_refresh_current_page(model_t *pmodel) {
+    return view_swap_page(pmodel, &pman.current_page);
 }
 
 

@@ -1,12 +1,15 @@
 #include <stdlib.h>
 #include <assert.h>
 #include "model.h"
+#include "model_descriptor.h"
 #include "gel/scheduler/scheduler.h"
 #include "config/app_config.h"
 
 
 void model_init(model_t *pmodel) {
     assert(pmodel != NULL);
+
+    model_descriptor_init();
 
     pmodel->configuration.language                         = 0;
     pmodel->configuration.erogation_seconds                = 5;

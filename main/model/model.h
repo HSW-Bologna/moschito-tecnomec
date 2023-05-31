@@ -78,7 +78,7 @@ typedef struct {
 
     struct {
         uint8_t           stop;
-        time_t            stop_time;
+        uint32_t          stop_time;
         erogators_state_t erogators_state;
         uint8_t           missing_water_alarm;
         uint8_t           missing_product[NUM_EROGATORS];

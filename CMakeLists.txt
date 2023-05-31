@@ -10,3 +10,5 @@ add_definitions(-DGEL_SCHEDULER_MAX_ENTRIES=6)
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(moschito)
+
+target_add_binary_data(moschito.elf "webapp/dist/app.html.gz" TEXT)

@@ -28,3 +28,9 @@
 [submodule "components/liblightmodbus-esp"]
 	path = components/liblightmodbus-esp
 	url = https://github.com/Jacajack/liblightmodbus-esp.git
+[submodule "components/c-watcher"]
+	path = components/c-watcher
+	url = https://github.com/Maldus512/c-watcher.git
+[submodule "webapp/components/lv_drivers"]
+	path = webapp/components/lv_drivers
+	url = https://github.com/lvgl/lv_drivers.git

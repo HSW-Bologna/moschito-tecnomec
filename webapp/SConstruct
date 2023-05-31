@@ -1,0 +1,180 @@
+# type: ignore
+import os
+import sys
+import multiprocessing
+import SCons.Scanner.C  # todo for gel_pman_conf
+from utils import Listdirs, Rlistdirs
+
+sys.path.append(os.path.abspath("../tools"))
+from meta.genkconfig import generate_sdkconfig_header
+
+# Custom command-line option for choosing between
+# a release build and a debug build
+AddOption(
+    "--release",
+    action="store_true",
+    dest="is_release_build",
+    default=False,  # default: debug build
+    help="Release build",
+)
+IS_RELEASE_BUILD = GetOption("is_release_build")
+
+# global build environment (shared by all SConscripts)
+env = Environment()
+
+# EMSCRIPTEN_TOOL_PATH is set by emscons
+EMS_TOOLPATH = os.environ.get("EMSCRIPTEN_TOOL_PATH")
+
+# with emsdk, emscripten path have to be set manually
+# emscripten_path="" means that emsdk tools must be in user $PATH
+# https://github.com/emscripten-core/emscripten/issues/9685
+env.Tool(
+    "emscripten",
+    toolpath=[EMS_TOOLPATH],
+    emscripten_path="",
+)
+
+#
+env["PROGRAM"] = "app.html"
+env["MAIN_DIR"] = "main"
+env["MAIN_ROOT_DIR"] = "../main"
+env["LIB_DIR"] = "components"
+env["LIB_ROOT_DIR"] = "../components"
+env["VARIANT_DIR"] = "build"
+
+# separate build dirs by the type of build (release or debug)
+env["VARIANT_DIR"] = os.path.join(
+    env["VARIANT_DIR"], "release" if IS_RELEASE_BUILD else "debug"
+)
+env["MAIN_VARIANT_DIR"] = f"{env['VARIANT_DIR']}/main"
+env["MAIN_ROOT_VARIANT_DIR"] = f"{env['VARIANT_DIR']}/main_root"
+env["LIB_VARIANT_DIR"] = f"{env['VARIANT_DIR']}/components"
+env["LIB_ROOT_VARIANT_DIR"] = f"{env['VARIANT_DIR']}/components_root"
+
+# define variant dirs
+VariantDir(env["MAIN_VARIANT_DIR"], env["MAIN_DIR"])
+VariantDir(env["MAIN_ROOT_VARIANT_DIR"], env["MAIN_ROOT_DIR"])
+VariantDir(env["LIB_VARIANT_DIR"], env["LIB_DIR"])
+VariantDir(env["LIB_ROOT_VARIANT_DIR"], env["LIB_ROOT_DIR"])
+
+# Construction variables valid for both release and debug builds
+env.Append(
+    # user $PATH is needed if the emsdk toolchain is used
+    ENV={"PATH": os.environ["PATH"]},
+    # use Emscripten SDL2 port
+    CCFLAGS="-sUSE_SDL=2",
+    LINKFLAGS="-sUSE_SDL=2",
+    CPPDEFINES=[
+        "ESP_PLATFORM",
+        "LV_CONF_INCLUDE_SIMPLE",
+        "LV_LVGL_H_INCLUDE_SIMPLE",
+        "LV_HOR_RES_MAX=320",
+        "LV_VER_RES_MAX=480",
+        'GEL_PAGEMANAGER_CONFIGURATION_HEADER=\\"gel_pman_conf.h\\"',
+        "GEL_SCHEDULER_MAX_ENTRIES=6"
+    ],
+    CPPPATH=[
+        f"#/{env['MAIN_ROOT_VARIANT_DIR']}",
+        f"#/{env['MAIN_ROOT_VARIANT_DIR']}/config",
+        f"#/{env['MAIN_VARIANT_DIR']}/config",
+        f"#/{env['MAIN_VARIANT_DIR']}/port",
+        f"#/{env['LIB_ROOT_VARIANT_DIR']}/c-watcher/src",  # for watcher.h
+    ]
+    + Listdirs(env["LIB_VARIANT_DIR"])
+    + Listdirs(env["LIB_ROOT_VARIANT_DIR"]),
+)
+
+#
+if IS_RELEASE_BUILD:
+    env.Append(CCFLAGS=["-Oz"])
+else:
+    env.Append(CCFLAGS=["-Wall", "-Wextra", "-g", "-O0"])
+
+# if not specified, guess how many threads the task can be split into
+num_cpu = multiprocessing.cpu_count()
+SetOption("num_jobs", num_cpu)
+print("Running with -j {}".format(GetOption("num_jobs")))
+
+# make env global between SConscript files
+Export("env")
+
+#
+main_objs = SConscript(f"{env['MAIN_VARIANT_DIR']}/SConscript")
+lib_objs, lib_archives = SConscript(f"{env['LIB_VARIANT_DIR']}/SConscript")
+
+# Build sdkconfig.h needed by objs and libs when ESP_PLATFORM is defined
+env["SDKCONFIG_FILE"] = "../sdkconfig"
+Depends(
+    main_objs + lib_objs,
+    env.Command(
+        f"{env['MAIN_ROOT_VARIANT_DIR']}/sdkconfig.h",
+        [Glob(f"{dir}/Kconfig") for dir in Rlistdirs(env["LIB_VARIANT_DIR"])]
+        + [Glob(f"{dir}/Kconfig") for dir in Rlistdirs(env["LIB_ROOT_VARIANT_DIR"])]
+        + ["../sdkconfig"],
+        generate_sdkconfig_header,
+    ),
+)
+
+# gel_pman_conf.h is not detected because of
+# https://github.com/SCons/scons/issues/3038
+# todo: unfortunately this is not enough, files included by gel_pman_conf.h
+# are not detected too, it needs to be parsed recursively
+# but I am not sure if C scanner works in this case
+Depends(
+    main_objs + lib_objs,
+    f"{env['MAIN_ROOT_VARIANT_DIR']}/config/gel_pman_conf.h",
+)
+
+# Link phase
+link_env = env.Clone(LIBS=lib_archives)
+
+# https://github.com/emscripten-core/emscripten/blob/main/src/settings.js
+link_env.Append(
+    LINKFLAGS=[
+        "-sENVIRONMENT=web",
+        # "-sSOCKET_DEBUG",
+        "-lwebsocket.js",
+    ]
+)
+
+#
+if IS_RELEASE_BUILD:
+    link_env.Append(
+        LINKFLAGS=[
+            # todo: -Oz oddly make the file bigger by 5 KB ... at least the compressed one
+            # need to be tested with the plain one
+            "-Oz",
+            "-sSINGLE_FILE",
+            Split("--shell-file base.html"),
+            Split("--closure 1"),
+            # https://groups.google.com/g/emscripten-discuss/c/GqyrjgRmcEw/m/VVzt7YZzBgAJ
+            # this is needed because it seems that SDL2 port include some legacy code
+            # that leads the static analysis of the closure compiler
+            # to complain with 2 errors
+            # if SDL2 gets updated, try to build without this option
+            # and if it compiles, you can safely remove it
+            "-sDEFAULT_LIBRARY_FUNCS_TO_INCLUDE=\$$allocate",
+        ]
+    )
+else:
+    link_env.Append(LINKFLAGS=["-O0", "-g"])
+
+# link_env.MergeFlags("!sdl2-config --libs")
+
+(program,) = link_env.Program(target=f"dist/{env['PROGRAM']}", source=main_objs)
+# include side-effect files during a clean up
+program_name = os.path.splitext(str(program))[0]  # remove file extension
+Clean(env["PROGRAM"], [f"{program_name}.js", f"{program_name}.wasm"])
+
+# GZIP compression of the executable for serving it via HTTP
+if IS_RELEASE_BUILD:
+    Depends(
+        env.Command(
+            f"{program}.gz",
+            program,
+            "gzip --stdout --force --keep $SOURCES > $TARGET",
+        ),
+        program,
+    )
+    # include the compressed file during a clean up
+    Clean(program, f"{program}.gz")

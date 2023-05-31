@@ -1,0 +1,49 @@
+# type: ignore
+from utils import Rlistdirs
+
+Import("env")
+
+# LVGL DRIVERS
+lvdrv_env = env.Clone()
+lvdrv_objs = lvdrv_env.Object([Glob(f"{dir}/*.c") for dir in Rlistdirs("lv_drivers")])
+lvdrv_lib = lvdrv_env.StaticLibrary(target="lv_drivers", source=lvdrv_objs)
+NoClean(lvdrv_objs, lvdrv_lib)
+
+# LVGL
+lvgl_env = env.Clone()
+lvgl_objs = lvgl_env.Object(
+    [
+        Glob(f"{dir}/*.c")
+        for dir in Rlistdirs(f"#/{env['LIB_ROOT_VARIANT_DIR']}/lvgl/src")
+    ]
+)
+lvgl_lib = lvgl_env.StaticLibrary(
+    target=f"#/{env['LIB_ROOT_VARIANT_DIR']}/lvgl", source=lvgl_objs
+)
+NoClean(lvgl_objs, lvgl_lib)
+
+# GENERIC EMBEDDED LIBS
+GELIBS = ["scheduler", "pagemanager"]
+gel_env = env.Clone()
+gel_objs = gel_env.Object(
+    [
+        Glob(f"#/{env['LIB_ROOT_VARIANT_DIR']}/generic_embedded_libs/gel/{gelib}/*.c")
+        for gelib in GELIBS
+    ]
+)
+gel_lib = gel_env.StaticLibrary(
+    target=f"#/{env['LIB_ROOT_VARIANT_DIR']}/gel", source=gel_objs
+)
+NoClean(gel_objs, gel_lib)
+
+# C-WATCHER
+cw_env = env.Clone()
+cw_objs = cw_env.Object(f"#/{env['LIB_ROOT_VARIANT_DIR']}/c-watcher/src/watcher.c")
+cw_lib = cw_env.StaticLibrary(
+    target=f"#/{env['LIB_ROOT_VARIANT_DIR']}/c-watcher", source=cw_objs
+)
+NoClean(cw_objs, cw_lib)
+
+lib_objs = lvdrv_objs + lvgl_objs + gel_objs + cw_objs
+lib_archives = lvdrv_lib + lvgl_lib + gel_lib + cw_lib
+Return("lib_objs", "lib_archives")

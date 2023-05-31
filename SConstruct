@@ -31,6 +31,7 @@ LVGL = f"{COMPONENTS}/lvgl"
 DRIVERS = f"{SIMULATOR}/lv_drivers"
 STRING_TRANSLATIONS = f"{MAIN}/view/intl"
 LIGHTMODBUS = f"{COMPONENTS}/liblightmodbus-esp"
+WATCHER = f"{COMPONENTS}/c-watcher"
 
 CFLAGS = [
     "-Wall",
@@ -59,7 +60,8 @@ LDLIBS = ["-lSDL2", "-lpthread", "-lm"]
 CPPPATH = [
     COMPONENTS, f'#{SIMULATOR}/port', f'#{MAIN}',
     f"#{MAIN}/config", f"#{SIMULATOR}", B64, CJSON, f"#{LVGL}", f"#{DRIVERS}",
-    f"#{LIGHTMODBUS}/repo/include"
+    f"#{LIGHTMODBUS}/repo/include",
+    f"#{WATCHER}/src"
 ]
 
 TRANSLATIONS = [
@@ -137,6 +139,7 @@ def main():
     sources += [File(f'{B64}/encode.c'),
                 File(f'{B64}/decode.c'), File(f'{B64}/buffer.c')]
     sources += [File(f"{LIGHTMODBUS}/src/impl.c")]
+    sources += [File(f"{WATCHER}/src/watcher.c")]
 
     prog = env.Program(PROGRAM, sources +
                        freertos + i2c + gel)

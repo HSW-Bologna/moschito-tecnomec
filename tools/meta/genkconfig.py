@@ -2,10 +2,10 @@ import os
 import kconfiglib
 
 
-def getKconfig(kconfig):
-    if os.path.isfile('sdkconfig'):
+def getKconfig(kconfig, sdkconfig_file):
+    if os.path.isfile(sdkconfig_file):
         config = kconfiglib.Kconfig(kconfig)
-        config.load_config('sdkconfig')
+        config.load_config(sdkconfig_file)
     else:
         print('Not configured!')
         exit(1)
@@ -13,6 +13,8 @@ def getKconfig(kconfig):
 
 
 def generate_sdkconfig_header(target, source, env):
+    sdkconfig_file = env.get('SDKCONFIG_FILE', 'sdkconfig')
+
     content = """
 #ifndef SDKCONFIG_H_INCLUDED
 #define SDKCONFIG_H_INCLUDED
@@ -20,9 +22,9 @@ def generate_sdkconfig_header(target, source, env):
 
     """
     for config in list(
-            map(lambda x: getKconfig(str(x)),
+            map(lambda x: getKconfig(str(x), sdkconfig_file),
                 [kconf for kconf in source if 'Kconfig' in str(kconf)])):
-        config.load_config('sdkconfig')
+        config.load_config(sdkconfig_file)
 
         for (key, sym) in [(x, config.syms[x]) for x in config.syms.keys()]:
             if sym.type == kconfiglib.BOOL and sym.str_value == 'y':
