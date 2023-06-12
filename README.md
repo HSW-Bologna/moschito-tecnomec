@@ -12,3 +12,8 @@ Application for Tecnomec's bug repellant erogator.
  - one of the inputs is for a water level sensor (digital)
  - The button on the board is for fully turning off the device
  - One of the relais should be run for a fixed time when the erogation is over (configurable)
+
+# TODO
+
+ - move the homepage button always in the same place (top left?)
+ - the setting for the timer should include starting time and duration (vs starting time and end time), to allow for seconds to be input

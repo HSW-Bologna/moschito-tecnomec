@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stdlib.h>
 #include <string.h> /* for memcpy */
 #include <emscripten/websocket.h>
 #include "wsclient.h"

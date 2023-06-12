@@ -14,7 +14,7 @@ AddOption(
     "--release",
     action="store_true",
     dest="is_release_build",
-    default=False,  # default: debug build
+    default=True,  # default: debug build
     help="Release build",
 )
 IS_RELEASE_BUILD = GetOption("is_release_build")
@@ -28,11 +28,7 @@ EMS_TOOLPATH = os.environ.get("EMSCRIPTEN_TOOL_PATH")
 # with emsdk, emscripten path have to be set manually
 # emscripten_path="" means that emsdk tools must be in user $PATH
 # https://github.com/emscripten-core/emscripten/issues/9685
-env.Tool(
-    "emscripten",
-    toolpath=[EMS_TOOLPATH],
-    emscripten_path="",
-)
+env.Tool( "emscripten", toolpath=[EMS_TOOLPATH], emscripten_path="",)
 
 #
 env["PROGRAM"] = "app.html"
