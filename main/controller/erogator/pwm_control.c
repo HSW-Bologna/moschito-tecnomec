@@ -39,6 +39,8 @@ void erogator_pwm_control_init(void) {
     static StaticTimer_t timer_buffer;
     timer = xTimerCreateStatic(TAG, pdMS_TO_TICKS(100), 1, NULL, timer_cb, &timer_buffer);
     xTimerStart(timer, portMAX_DELAY);
+
+    erogator_pwm_control_off();
 }
 
 

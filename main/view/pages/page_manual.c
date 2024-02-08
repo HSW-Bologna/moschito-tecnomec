@@ -8,6 +8,7 @@
 #include "view/theme/style.h"
 #include "view/intl/intl.h"
 #include "gel/pagemanager/page_manager.h"
+#include "esp_log.h"
 
 
 LV_IMG_DECLARE(img_gear);
@@ -44,6 +45,9 @@ struct page_data {
 
 static void update_page(model_t *pmodel, struct page_data *pdata);
 static void update_time(model_t *pmodel, struct page_data *pdata);
+
+
+static const char *TAG = "PageManual";
 
 
 static void *create_page(model_t *pmodel, void *extra) {
@@ -162,6 +166,7 @@ static view_message_t page_event(model_t *pmodel, void *args, view_event_t event
 
 static void update_page(model_t *pmodel, struct page_data *pdata) {
     erogators_state_t corrisponding_state = pdata->erogator == EROGATOR_1 ? EROGATORS_STATE_1 : EROGATORS_STATE_2;
+    ESP_LOGI(TAG, "%i %i %i", pdata->erogator, corrisponding_state, model_get_erogators_state(pmodel));
 
     view_common_update_erogator_graphic(
         &pdata->erogator_objs, corrisponding_state, model_get_missing_water_alarm(pmodel),

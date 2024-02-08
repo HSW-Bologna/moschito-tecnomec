@@ -6,6 +6,7 @@
 #include "view/view.h"
 #include "esp_log.h"
 #include "controller/wifi/server.h"
+#include "controller/controller.h"
 
 /* --- prototypes --- */
 
@@ -32,7 +33,7 @@ void rtc_message_recvd_handler(uint8_t *msg_data, uint32_t msg_size, model_t *pm
         return;
     }
 
-    msg_type = *((uint16_t*) msg_data);
+    msg_type = *((uint16_t *)msg_data);
 
     ESP_LOGI(TAG, "Received msg type: %hu", msg_type);
 
@@ -47,6 +48,33 @@ void rtc_message_recvd_handler(uint8_t *msg_data, uint32_t msg_size, model_t *pm
         case MODEL_REPLACE_MESSAGE:
             ESP_LOGE(TAG, "Not supported type to receive: %hu", msg_type);
             break;
+        case MESSAGE_TYPE_CONTROLLER: {
+            view_controller_message_t controller_msg;
+            controller_msg.code = msg_data[0];
+
+            switch (controller_msg.code) {
+                case VIEW_CONTROLLER_MESSAGE_CODE_NOTHING:
+                    break;
+
+                case VIEW_CONTROLLER_MESSAGE_CODE_TOGGLE_EROGATION: {
+                    controller_msg.erogator = msg_data[1];
+                    break;
+                }
+
+                case VIEW_CONTROLLER_MESSAGE_CODE_START_EROGATION:
+                case VIEW_CONTROLLER_MESSAGE_CODE_STOP_EROGATION:
+                    break;
+
+                case VIEW_CONTROLLER_MESSAGE_CODE_SAVE_RTC_TIME: {
+                    // utils_set_system_time(&msg->time_info);
+                    // TODO: serialize the time info
+                    break;
+                }
+            }
+
+            controller_process_message(pmodel, &controller_msg);
+            break;
+        }
         default:
             ESP_LOGW(TAG, "Invalid message type received: %hu", msg_type);
             break;
@@ -62,33 +90,29 @@ void rtc_message_recvd_handler(uint8_t *msg_data, uint32_t msg_size, model_t *pm
  *  uint32_t    model member offset
  *     x        model member data
  */
-void rtc_send_model_update_message(
-    const uint8_t *member_data,
-    uint32_t member_data_size,
-    uint32_t member_data_offset,
-    uint16_t member_idx
-) {
-    ESP_LOGI(TAG, "Sending msg type: %hu", MODEL_UPDATE_MESSAGE);
+void rtc_send_model_update_message(const uint8_t *member_data, uint32_t member_data_size, uint32_t member_data_offset,
+                                   uint16_t member_idx) {
+    ESP_LOGD(TAG, "Sending msg type: %hu", MODEL_UPDATE_MESSAGE);
 
     if (member_data_size == 0) {
         ESP_LOGE(TAG, "No member data to send on rtc_send_model_update_message()");
         return;
     }
 
-    size_t msg_size = sizeof(uint16_t) + sizeof(uint16_t) + sizeof(uint32_t) + member_data_size;
-    uint8_t msg_data[msg_size];
+    size_t   msg_size = sizeof(uint16_t) + sizeof(uint16_t) + sizeof(uint32_t) + member_data_size;
+    uint8_t  msg_data[msg_size];
     uint8_t *msg_data_ptr = msg_data;
 
     /* message type */
-    *((uint16_t *) msg_data_ptr) = MODEL_UPDATE_MESSAGE;
+    *((uint16_t *)msg_data_ptr) = MODEL_UPDATE_MESSAGE;
     msg_data_ptr += sizeof(uint16_t);
 
     /* model member idx */
-    *((uint16_t *) msg_data_ptr) = member_idx;
+    *((uint16_t *)msg_data_ptr) = member_idx;
     msg_data_ptr += sizeof(uint16_t);
 
     /* model member offset */
-    *((uint32_t *) msg_data_ptr) = member_data_offset;
+    *((uint32_t *)msg_data_ptr) = member_data_offset;
     msg_data_ptr += sizeof(uint32_t);
 
     /* model member data */
@@ -111,13 +135,13 @@ void rtc_send_model_replace_message(model_t *pmodel) {
 #define BUF_SIZE 100 /* size must be > the max size of the model members */
     ESP_LOGI(TAG, "Sending msg type: %hu", MODEL_REPLACE_MESSAGE);
 
-    uint8_t buf[BUF_SIZE];
-    size_t i = 0;
-    uint16_t model_member_idx = 0;
+    uint8_t         buf[BUF_SIZE];
+    size_t          i                = 0;
+    uint16_t        model_member_idx = 0;
     model_member_t *model_member;
 
     /* message type */
-    *((uint16_t *) buf) = MODEL_REPLACE_MESSAGE;
+    *((uint16_t *)buf) = MODEL_REPLACE_MESSAGE;
     i += sizeof(uint16_t);
 
     /* send multiple replace messages using always the same buffer */
@@ -127,16 +151,16 @@ void rtc_send_model_replace_message(model_t *pmodel) {
             i = 0;
 
             /* message type */
-            *((uint16_t *) buf) = MODEL_REPLACE_MESSAGE;
+            *((uint16_t *)buf) = MODEL_REPLACE_MESSAGE;
             i += sizeof(uint16_t);
         }
 
         /* model member idx */
-        *((uint16_t *) (buf + i)) = model_member_idx;
+        *((uint16_t *)(buf + i)) = model_member_idx;
         i += sizeof(uint16_t);
 
         /* model member data */
-        memcpy(buf + i, (unsigned char *) pmodel + model_member->offset, model_member->size);
+        memcpy(buf + i, (unsigned char *)pmodel + model_member->offset, model_member->size);
         i += model_member->size;
 
         ++model_member_idx;
@@ -163,9 +187,9 @@ static void rtc_recvd_model_update_message(uint8_t *msg_data, uint32_t msg_size,
         return;
     }
 
-    uint8_t* msg_data_alias = msg_data;
+    uint8_t *msg_data_alias = msg_data;
 
-    uint16_t model_member_idx = *((uint16_t *) msg_data_alias);
+    uint16_t        model_member_idx = *((uint16_t *)msg_data_alias);
     model_member_t *model_member;
     if ((model_member = model_descriptor_get_member(model_member_idx)) == NULL) {
         ESP_LOGE(TAG, "Failed to find model member idx on rtc_recvd_model_update_message()");
@@ -173,24 +197,20 @@ static void rtc_recvd_model_update_message(uint8_t *msg_data, uint32_t msg_size,
     }
     msg_data_alias += sizeof model_member_idx;
 
-    uint32_t model_member_offset = *((uint32_t *) msg_data_alias); 
+    uint32_t model_member_offset = *((uint32_t *)msg_data_alias);
     msg_data_alias += sizeof model_member_offset;
 
     uint32_t model_member_data_size = msg_size - (msg_data_alias - msg_data);
 
     /* check for overflow (i.e. sanitize offset and size) */
-    if (// model_member_data_size < 1 || /* already included in the check at the beginning */
-        model_member->size < model_member_offset + model_member_data_size
-    ) {
+    if (     // model_member_data_size < 1 || /* already included in the check at the beginning */
+        model_member->size < model_member_offset + model_member_data_size) {
         ESP_LOGE(TAG, "Failed overflow check on rtc_recvd_model_update_message()");
         return;
     }
 
-    memcpy(
-        (uint8_t *) ((unsigned char *) pmodel + model_member->offset) + model_member_offset,
-        msg_data_alias,
-        model_member_data_size
-    );
+    memcpy((uint8_t *)((unsigned char *)pmodel + model_member->offset) + model_member_offset, msg_data_alias,
+           model_member_data_size);
     // model_watcher_trigger_member_silently(model_member_idx);
     view_refresh_current_page(pmodel);
 }

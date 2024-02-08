@@ -9,6 +9,7 @@
 #include "utils/utils.h"
 #include "view/view.h"
 #include "pwm_control_priv.h"
+#include "esp_log.h"
 
 
 #define START_DELAY 2000UL
@@ -143,6 +144,7 @@ static int off_event_manager(model_t *pmodel, erogator_event_t event) {
 static int on_manual_waiting_event_manager(model_t *pmodel, erogator_event_t event) {
     switch (event.tag) {
         case EROGATOR_EVENT_TAG_START_DELAY_DONE:
+            ESP_LOGI(TAG, "Starting erogator %i", current_erogator);
             start_erogator(pmodel, current_erogator);
             gel_timer_resume(&manual_timer, get_millis());
             return EROGATOR_SM_STATE_ON_MANUAL;
@@ -174,6 +176,7 @@ static int on_manual_waiting_event_manager(model_t *pmodel, erogator_event_t eve
 static int on_manual_event_manager(model_t *pmodel, erogator_event_t event) {
     switch (event.tag) {
         case EROGATOR_EVENT_TAG_STOP:
+            ESP_LOGI(TAG, "Stopping erogation");
             gel_timer_deactivate(&manual_timer);
             gel_timer_deactivate(&delay_timer);
             stop_everything(pmodel);
@@ -290,7 +293,7 @@ static void start_erogator(model_t *pmodel, erogator_t erogator) {
             model_set_erogators_state(pmodel, EROGATORS_STATE_1);
             break;
         case EROGATOR_2:
-            model_set_erogators_state(pmodel, EROGATORS_STATE_1);
+            model_set_erogators_state(pmodel, EROGATORS_STATE_2);
             break;
     }
 

@@ -7,7 +7,8 @@
  * the sender and the receiver */
 typedef enum {
     MODEL_REPLACE_MESSAGE = 0,
-    MODEL_UPDATE_MESSAGE
+    MODEL_UPDATE_MESSAGE,
+    MESSAGE_TYPE_CONTROLLER,
 } message_type_t;
 
 void rtc_initt(model_t *pmodel);

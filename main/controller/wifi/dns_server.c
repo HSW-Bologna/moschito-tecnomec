@@ -20,14 +20,14 @@
 #include "lwip/netdb.h"
 
 #define DNS_PORT (53)
-#define DNS_MAX_LEN (256)
+#define DNS_MAX_LEN (512)
 
 #define OPCODE_MASK (0x7800)
 #define QR_FLAG (1 << 7)
 #define QD_TYPE_A (0x0001)
 #define ANS_TTL_SEC (300)
 
-static const char *TAG = "example_dns_redirect_server";
+static const char *TAG = "DnsServer";
 
 // DNS Header Packet
 typedef struct __attribute__((__packed__))

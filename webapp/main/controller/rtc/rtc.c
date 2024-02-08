@@ -140,6 +140,50 @@ void rtc_send_model_update_message(
     wsclient_send_binary(ws, msg_data, msg_size);
 }
 
+
+/*
+ * Send MESSAGE_TYPE_CONTROLLER format
+ *  uint16_t    message type
+ *  uint16_t    controllermessage tag
+ *     x        message data
+ */
+void rtc_send_controller_message( view_controller_message_t *msg) {
+    ESP_LOGI(TAG, "Sending msg type: %hu", MESSAGE_TYPE_CONTROLLER);
+
+    size_t msg_min_size = sizeof(uint16_t) + sizeof(uint16_t);
+    size_t msg_max_size = msg_min_size + 1;
+    uint8_t msg_data[msg_max_size]; /* VLA */
+
+    *((uint16_t*)msg_data) = MESSAGE_TYPE_CONTROLLER;
+
+    msg_data[2] = msg->code & 0xFF;
+
+    size_t msg_size = msg_min_size;
+
+    switch (msg->code) {
+        case VIEW_CONTROLLER_MESSAGE_CODE_NOTHING:
+            return; // avoid sending useless messages
+
+        case VIEW_CONTROLLER_MESSAGE_CODE_TOGGLE_EROGATION: {
+            msg_data[3] = msg->erogator;
+            msg_size = msg_min_size + 1;
+            break;
+                                                            }
+
+        case VIEW_CONTROLLER_MESSAGE_CODE_START_EROGATION:
+        case VIEW_CONTROLLER_MESSAGE_CODE_STOP_EROGATION:
+            break;
+
+        case VIEW_CONTROLLER_MESSAGE_CODE_SAVE_RTC_TIME: {
+            //utils_set_system_time(&msg->time_info);
+            //TODO: serialize the time info
+            break;
+        }
+    }
+
+    wsclient_send_binary(ws, msg_data, msg_size);
+}
+
 /* --- received from server --- */
 
 /*

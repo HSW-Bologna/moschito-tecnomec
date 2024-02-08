@@ -79,6 +79,7 @@ void controller_process_message(model_t *pmodel, view_controller_message_t *msg)
             break;
 
         case VIEW_CONTROLLER_MESSAGE_CODE_TOGGLE_EROGATION:
+            ESP_LOGI(TAG, "Toggling (on) erogator %i for %is", msg->erogator, model_get_erogation_seconds(pmodel));
             if (model_get_erogators_state(pmodel) == EROGATORS_STATE_OFF) {
                 erogator_run(pmodel, msg->erogator, model_get_erogation_seconds(pmodel));
             } else {

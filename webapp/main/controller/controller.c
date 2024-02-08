@@ -19,6 +19,8 @@ void controller_init(model_t *pmodel) {
 void controller_process_message(model_t *pmodel, view_controller_message_t *msg) {
     (void) pmodel;
     (void) msg;
+
+    rtc_send_controller_message(msg);
 }
 
 void controller_manage(model_t *pmodel) {

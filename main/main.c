@@ -32,9 +32,9 @@ void app_main(void) {
 
     lvgl_i2c_init(I2C_NUM_0);
     lvgl_driver_init();
+    i2c_devices_init();
     digout_init();
     buzzer_init();
-    i2c_devices_init();
     modbus_init();
     livelli_init();
     button_init();

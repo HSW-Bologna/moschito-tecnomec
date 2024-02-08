@@ -58,7 +58,7 @@ static void model_watcher_cb(void *old_buffer, const void *memory, size_t size, 
     model_t *pmodel = (model_t *) user_ptr;
     (void) pmodel;
 
-    ESP_LOGI(TAG, "Watched change on model member with idx %zu", model_watched_member_idx);
+    ESP_LOGD(TAG, "Watched change on model member with idx %zu", model_watched_member_idx);
 
     uint8_t *old_buffer_ptr = old_buffer;
     const uint8_t *memory_ptr = memory;

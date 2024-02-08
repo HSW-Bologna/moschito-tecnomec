@@ -3,6 +3,10 @@
 #include "hardwareprofile.h"
 #include "i2c_devices.h"
 #include "I2C/i2c_devices/io/MCP23008/mcp23008.h"
+#include "esp_log.h"
+
+
+static const char *TAG = "Digout";
 
 
 void digout_init(void) {
@@ -17,6 +21,10 @@ void digout_init(void) {
 
     mcp23008_set_gpio_direction_register(io_driver, 0x0F);
     mcp23008_set_gppu_register(io_driver, 0x0F);
+
+    DIGOUT_CLEAR(DIGOUT_PUMP);
+
+    ESP_LOGI(TAG, "Initialized");
 }
 
 
